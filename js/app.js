@@ -134,69 +134,18 @@ var App = (function() {
     if (!container) return;
 
     var html = '<div class="rules-page">';
-    html += '<h2 class="rules-title">Contest Rules</h2>';
+    html += '<h2 class="rules-title">Scoring</h2>';
 
-    // Draft
-    html += '<div class="rules-section">';
-    html += '<h3>The Draft</h3>';
-    html += '<ul>';
-    html += '<li>All 64 NCAA tournament teams are distributed among ' + CONFIG.players.length + ' players via a <strong>snake draft</strong>.</li>';
-    html += '<li>Draft order is randomized before the draft begins.</li>';
-    html += '<li>Snake format: Round 1 goes 1-7, Round 2 goes 7-1, Round 3 goes 1-7, and so on.</li>';
-    html += '<li>The first drafter gets 10 teams. Everyone else gets 9 teams.</li>';
-    html += '</ul>';
-    html += '</div>';
-
-    // Scoring
-    html += '<div class="rules-section">';
-    html += '<h3>Scoring</h3>';
-    html += '<p>Each time one of your teams wins a game, you earn points based on the round:</p>';
+    html += '<p style="margin-bottom:12px;">Each time one of your teams wins a game, you earn points based on the round:</p>';
     html += '<table class="rules-table">';
-    html += '<tr><th>Round</th><th>Points Per Win</th></tr>';
-    var roundFullNames = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8', 'Final Four', 'Championship'];
+    html += '<tr><th>Round</th><th>Dates</th><th>Points</th></tr>';
     for (var i = 0; i < CONFIG.roundPoints.length; i++) {
-      html += '<tr><td>' + roundFullNames[i] + '</td><td>' + CONFIG.roundPoints[i] + '</td></tr>';
+      html += '<tr><td>' + CONFIG.roundFullNames[i] + '</td><td>' + CONFIG.roundDates[i] + '</td><td>' + CONFIG.roundPoints[i] + '</td></tr>';
     }
-    html += '<tr class="rules-total"><td>Max per team (wins it all)</td><td>' + CONFIG.roundPoints.reduce(function(a,b){return a+b;}, 0) + '</td></tr>';
+    html += '<tr class="rules-total"><td>Max per team</td><td></td><td>' + CONFIG.roundPoints.reduce(function(a,b){return a+b;}, 0) + '</td></tr>';
     html += '</table>';
-    html += '</div>';
 
-    // Winner
-    html += '<div class="rules-section">';
-    html += '<h3>Winning</h3>';
-    html += '<ul>';
-    html += '<li>The player with the <strong>most total points</strong> at the end of the tournament wins.</li>';
-    html += '<li>Tiebreaker: the player with more teams still alive at the end of the tournament. If still tied, the player whose team went furthest wins.</li>';
-    html += '</ul>';
-    html += '</div>';
-
-    // Teams alive
-    html += '<div class="rules-section">';
-    html += '<h3>Teams Alive</h3>';
-    html += '<ul>';
-    html += '<li>When your team loses, they are eliminated and shown with a strikethrough.</li>';
-    html += '<li>Your "teams alive" count tracks how many of your drafted teams are still in the tournament.</li>';
-    html += '<li>"Max Possible" shows the theoretical maximum points you could earn if all your remaining teams win every game.</li>';
-    html += '</ul>';
-    html += '</div>';
-
-    // Players
-    html += '<div class="rules-section">';
-    html += '<h3>Players</h3>';
-    html += '<div class="rules-players">';
-    for (var i = 0; i < CONFIG.players.length; i++) {
-      var p = CONFIG.players[i];
-      var teamCount = getTeamsForPlayer(p.id).length;
-      html += '<div class="rules-player-row">';
-      html += '<span class="player-badge" style="background:' + p.color + '">' + p.id + '</span>';
-      html += '<span>' + p.name + '</span>';
-      if (teamCount > 0) {
-        html += '<span style="color:#888;font-size:12px;">' + teamCount + ' teams</span>';
-      }
-      html += '</div>';
-    }
-    html += '</div>';
-    html += '</div>';
+    html += '<p style="margin-top:16px;">Most total points at the end of the tournament wins.</p>';
 
     html += '</div>';
     container.innerHTML = html;

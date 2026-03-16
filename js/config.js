@@ -3,7 +3,7 @@
 
 var CONFIG = {
   year: 2026,
-  roundPoints: [1, 2, 4, 8, 16, 32],
+  roundPoints: [1, 2, 3, 4, 5, 6],
   roundNames: ['R64', 'R32', 'S16', 'E8', 'F4', 'Champ'],
   roundFullNames: ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8', 'Final Four', 'Championship'],
   roundDates: ['Mar 20-21', 'Mar 22-23', 'Mar 27-28', 'Mar 29-30', 'Apr 5', 'Apr 7'],
