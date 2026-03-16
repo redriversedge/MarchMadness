@@ -1,23 +1,27 @@
-// app.js -- Init, tab navigation, admin overlay, auto-refresh
+// app.js -- Init, tab navigation, admin overlay, shared state sync
 
 var App = (function() {
   var activeTab = 'dashboard';
   var adminOpen = false;
+  var fontSize = 'normal'; // normal, large, xlarge
 
   function init() {
     State.init();
     Draft.init();
+    loadFontSize();
 
     // Set up tab navigation
     renderNav();
     switchTab('dashboard');
+
+    // Load shared state from server (overrides local for non-admin visitors)
+    loadSharedState();
 
     // Start API polling
     API.startPolling();
 
     // Update timestamps periodically
     setInterval(function() {
-      API.updateStatus && API.updateStatus('tick');
       var el = document.getElementById('last-updated');
       if (el) {
         var state = State.get();
@@ -28,6 +32,92 @@ var App = (function() {
         }
       }
     }, 60000);
+  }
+
+  function loadSharedState() {
+    fetch('/.netlify/functions/load-state')
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (!data) return;
+
+        // Load shared draft assignments
+        if (data.draft && Object.keys(data.draft).length > 0) {
+          var existing = Object.keys(DRAFT_ASSIGNMENTS);
+          for (var i = 0; i < existing.length; i++) {
+            delete DRAFT_ASSIGNMENTS[existing[i]];
+          }
+          var keys = Object.keys(data.draft);
+          for (var i = 0; i < keys.length; i++) {
+            DRAFT_ASSIGNMENTS[keys[i]] = data.draft[keys[i]];
+          }
+          Draft.init();
+        }
+
+        // Load shared game results
+        if (data.games && Object.keys(data.games).length > 0) {
+          var state = State.get();
+          var gameKeys = Object.keys(data.games);
+          for (var i = 0; i < gameKeys.length; i++) {
+            if (state.games[gameKeys[i]]) {
+              var sg = data.games[gameKeys[i]];
+              state.games[gameKeys[i]].winner = sg.winner;
+              state.games[gameKeys[i]].score1 = sg.score1;
+              state.games[gameKeys[i]].score2 = sg.score2;
+              state.games[gameKeys[i]].status = sg.status;
+              state.games[gameKeys[i]].manualOverride = sg.manualOverride;
+            }
+          }
+          State.save();
+        }
+
+        // Re-render current tab
+        switchTab(activeTab);
+
+        // Show last published time
+        if (data.meta && data.meta.lastPublished) {
+          var el = document.getElementById('last-published');
+          if (el) {
+            var d = new Date(data.meta.lastPublished);
+            el.textContent = 'Published: ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
+          }
+        }
+      })
+      .catch(function(err) {
+        console.log('Could not load shared state (offline or local dev):', err.message);
+      });
+  }
+
+  function publishState() {
+    var pin = prompt('Enter admin PIN to publish:');
+    if (!pin) return;
+
+    var state = State.get();
+    var statusEl = document.getElementById('publish-status');
+    if (statusEl) statusEl.textContent = 'Publishing...';
+
+    fetch('/.netlify/functions/save-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pin: pin,
+        draft: DRAFT_ASSIGNMENTS,
+        games: state.games
+      })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.success) {
+        if (statusEl) statusEl.textContent = 'Published! Everyone will see the latest data.';
+        setTimeout(function() {
+          if (statusEl) statusEl.textContent = '';
+        }, 5000);
+      } else {
+        if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Unknown error');
+      }
+    })
+    .catch(function(err) {
+      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
+    });
   }
 
   function renderNav() {
@@ -47,20 +137,17 @@ var App = (function() {
   function switchTab(tab) {
     activeTab = tab;
 
-    // Update nav buttons
     var buttons = document.querySelectorAll('.nav-btn');
     for (var i = 0; i < buttons.length; i++) {
       buttons[i].className = buttons[i].getAttribute('data-tab') === tab ?
         'nav-btn active' : 'nav-btn';
     }
 
-    // Show correct tab content
     var dashboard = document.getElementById('tab-dashboard');
     var bracket = document.getElementById('tab-bracket');
     if (dashboard) dashboard.style.display = tab === 'dashboard' ? 'block' : 'none';
     if (bracket) bracket.style.display = tab === 'bracket' ? 'block' : 'none';
 
-    // Render active tab
     if (tab === 'dashboard') Dashboard.render();
     else if (tab === 'bracket') BracketView.render();
   }
@@ -80,7 +167,6 @@ var App = (function() {
 
     var html = '';
 
-    // Tabs within admin
     html += '<div class="admin-tabs">';
     html += '<button class="admin-tab active" onclick="App.showAdminSection(\'draft\', this)">Draft</button>';
     html += '<button class="admin-tab" onclick="App.showAdminSection(\'results\', this)">Results</button>';
@@ -99,14 +185,40 @@ var App = (function() {
 
     // Settings section
     html += '<div id="admin-settings" class="admin-section" style="display:none;">';
-    html += '<button class="btn btn-primary" onclick="API.fetchScores()">Force Refresh Scores</button>';
+
+    // Publish
+    html += '<h3 style="margin-bottom:8px;">Share with Everyone</h3>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:8px;">Publish your draft and results so everyone sees the same data when they open the link.</p>';
+    html += '<button class="btn btn-primary" onclick="App.publishState()">Publish to Server</button>';
+    html += '<button class="btn btn-secondary" onclick="App.loadSharedState()">Pull Latest from Server</button>';
+    html += '<div id="publish-status" style="font-size:12px;color:#22c55e;margin-top:6px;"></div>';
+    html += '<div id="last-published" style="font-size:11px;color:#888;margin-top:4px;"></div>';
+
+    // Font size
+    html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;">';
+    html += '<h3 style="margin-bottom:8px;">Display</h3>';
+    html += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
+    html += '<button class="btn ' + (fontSize === 'normal' ? 'btn-primary' : 'btn-secondary') + '" onclick="App.setFontSize(\'normal\')">Normal</button>';
+    html += '<button class="btn ' + (fontSize === 'large' ? 'btn-primary' : 'btn-secondary') + '" onclick="App.setFontSize(\'large\')">Large</button>';
+    html += '<button class="btn ' + (fontSize === 'xlarge' ? 'btn-primary' : 'btn-secondary') + '" onclick="App.setFontSize(\'xlarge\')">X-Large</button>';
+    html += '</div>';
+    html += '</div>';
+
+    // Refresh
     html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid #333;">';
+    html += '<h3 style="margin-bottom:8px;">Scores</h3>';
+    html += '<button class="btn btn-secondary" onclick="API.fetchScores()">Force Refresh from ESPN</button>';
+    html += '</div>';
+
+    // Danger zone
+    html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;">';
     html += '<h3 style="margin-bottom:8px;color:#ef4444;">Danger Zone</h3>';
     html += '<button class="btn btn-danger" onclick="App.confirmResetDraft()">Reset Draft Only</button>';
     html += '<p style="font-size:11px;color:#888;margin:4px 0 12px;">Clears all team assignments. You will need to re-draft.</p>';
     html += '<button class="btn btn-danger" onclick="App.confirmResetAll()">Reset Everything</button>';
     html += '<p style="font-size:11px;color:#888;margin:4px 0 0;">Clears draft AND all game results. Full fresh start.</p>';
     html += '</div>';
+
     html += '</div>';
 
     content.innerHTML = html;
@@ -132,8 +244,8 @@ var App = (function() {
   function renderResultsEntry() {
     var state = State.get();
     var html = '<h3>Manual Results Entry</h3>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Click the winning team to set results. Remember to Publish after updating.</p>';
 
-    // List games that need results
     var gameKeys = Object.keys(BRACKET);
     gameKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
 
@@ -154,7 +266,6 @@ var App = (function() {
       html += '<div class="result-meta">' + roundName + ' - ' + region + '</div>';
       html += '<div class="result-matchup">';
 
-      // Team 1 button
       var w1Class = g.winner === teams.team1 ? ' winner-btn' : '';
       html += '<button class="result-team' + w1Class + '" ';
       html += 'onclick="App.setWinner(\'' + gId + '\', \'' + teams.team1 + '\')">';
@@ -163,7 +274,6 @@ var App = (function() {
 
       html += '<span class="result-vs">vs</span>';
 
-      // Team 2 button
       var w2Class = g.winner === teams.team2 ? ' winner-btn' : '';
       html += '<button class="result-team' + w2Class + '" ';
       html += 'onclick="App.setWinner(\'' + gId + '\', \'' + teams.team2 + '\')">';
@@ -201,6 +311,24 @@ var App = (function() {
     }
   }
 
+  // Font size
+  function setFontSize(size) {
+    fontSize = size;
+    document.documentElement.setAttribute('data-fontsize', size);
+    try { localStorage.setItem('mm_fontsize', size); } catch(e) {}
+    renderAdmin();
+  }
+
+  function loadFontSize() {
+    try {
+      var saved = localStorage.getItem('mm_fontsize');
+      if (saved) {
+        fontSize = saved;
+        document.documentElement.setAttribute('data-fontsize', saved);
+      }
+    } catch(e) {}
+  }
+
   return {
     init: init,
     switchTab: switchTab,
@@ -208,9 +336,11 @@ var App = (function() {
     showAdminSection: showAdminSection,
     setWinner: setWinner,
     confirmResetDraft: confirmResetDraft,
-    confirmResetAll: confirmResetAll
+    confirmResetAll: confirmResetAll,
+    publishState: publishState,
+    loadSharedState: loadSharedState,
+    setFontSize: setFontSize
   };
 })();
 
-// Init on DOM ready
 document.addEventListener('DOMContentLoaded', App.init);

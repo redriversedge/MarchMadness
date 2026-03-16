@@ -29,7 +29,29 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+  font-size: 14px;
 }
+
+/* Font size settings */
+[data-fontsize="large"] body,
+[data-fontsize="large"] { font-size: 16px; }
+[data-fontsize="large"] .team-slot { font-size: 14px; min-height: 32px; }
+[data-fontsize="large"] .team-seed { font-size: 12px; }
+[data-fontsize="large"] .player-name { font-size: 16px; }
+[data-fontsize="large"] .score-num { font-size: 26px; }
+[data-fontsize="large"] .round-label { font-size: 12px; }
+[data-fontsize="large"] .round-pts { font-size: 16px; }
+
+[data-fontsize="xlarge"] body,
+[data-fontsize="xlarge"] { font-size: 18px; }
+[data-fontsize="xlarge"] .team-slot { font-size: 16px; min-height: 36px; padding: 8px 10px; }
+[data-fontsize="xlarge"] .team-seed { font-size: 14px; }
+[data-fontsize="xlarge"] .player-name { font-size: 18px; }
+[data-fontsize="xlarge"] .score-num { font-size: 30px; }
+[data-fontsize="xlarge"] .round-label { font-size: 13px; }
+[data-fontsize="xlarge"] .round-pts { font-size: 18px; }
+[data-fontsize="xlarge"] .team-owner-badge { font-size: 11px; padding: 2px 6px; }
+[data-fontsize="xlarge"] .matchup { min-width: 200px; }
 
 #app {
   display: flex;
@@ -984,18 +1006,22 @@ body {
 
 /* === RESPONSIVE === */
 @media (max-width: 767px) {
+  /* Bracket stays horizontal on mobile - swipe left/right */
   .bracket-horizontal {
-    flex-direction: column;
-    gap: 12px;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    padding-bottom: 8px;
   }
 
-  .bracket-col[data-round="2"] .bracket-game-wrap,
-  .bracket-col[data-round="3"] .bracket-game-wrap,
-  .bracket-col[data-round="4"] .bracket-game-wrap {
-    padding: 2px 4px;
+  .bracket-col {
+    min-width: 150px;
+    scroll-snap-align: start;
   }
 
-  .bracket-col { min-width: unset; }
+  .matchup { min-width: 145px; }
 
   .ff-bracket-layout {
     flex-direction: column;
@@ -1004,6 +1030,7 @@ body {
 
   .ff-side, .ff-center { max-width: 100%; }
 
+  /* Full bracket: stack regions vertically, each region scrolls horizontally */
   .full-bracket {
     flex-direction: column;
     gap: 24px;
@@ -1016,6 +1043,13 @@ body {
   .full-bracket-center {
     width: 100%;
   }
+
+  .full-region-bracket {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bracket-col-sm { min-width: 90px; }
 
   .ff-bracket {
     flex-direction: row;
