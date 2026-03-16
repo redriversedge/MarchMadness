@@ -1,26 +1,20 @@
-// app.js -- Init, tab navigation, admin overlay, shared state sync
+// app.js -- Init, tab navigation, admin overlay, shared state sync, rules
 
 var App = (function() {
   var activeTab = 'dashboard';
   var adminOpen = false;
-  var fontSize = 'normal'; // normal, large, xlarge
+  var fontSize = 'normal';
 
   function init() {
     State.init();
     Draft.init();
     loadFontSize();
 
-    // Set up tab navigation
     renderNav();
     switchTab('dashboard');
-
-    // Load shared state from server (overrides local for non-admin visitors)
     loadSharedState();
-
-    // Start API polling
     API.startPolling();
 
-    // Update timestamps periodically
     setInterval(function() {
       var el = document.getElementById('last-updated');
       if (el) {
@@ -40,20 +34,14 @@ var App = (function() {
       .then(function(data) {
         if (!data) return;
 
-        // Load shared draft assignments
         if (data.draft && Object.keys(data.draft).length > 0) {
           var existing = Object.keys(DRAFT_ASSIGNMENTS);
-          for (var i = 0; i < existing.length; i++) {
-            delete DRAFT_ASSIGNMENTS[existing[i]];
-          }
+          for (var i = 0; i < existing.length; i++) delete DRAFT_ASSIGNMENTS[existing[i]];
           var keys = Object.keys(data.draft);
-          for (var i = 0; i < keys.length; i++) {
-            DRAFT_ASSIGNMENTS[keys[i]] = data.draft[keys[i]];
-          }
+          for (var i = 0; i < keys.length; i++) DRAFT_ASSIGNMENTS[keys[i]] = data.draft[keys[i]];
           Draft.init();
         }
 
-        // Load shared game results
         if (data.games && Object.keys(data.games).length > 0) {
           var state = State.get();
           var gameKeys = Object.keys(data.games);
@@ -70,20 +58,10 @@ var App = (function() {
           State.save();
         }
 
-        // Re-render current tab
         switchTab(activeTab);
-
-        // Show last published time
-        if (data.meta && data.meta.lastPublished) {
-          var el = document.getElementById('last-published');
-          if (el) {
-            var d = new Date(data.meta.lastPublished);
-            el.textContent = 'Published: ' + d.toLocaleDateString() + ' ' + d.toLocaleTimeString();
-          }
-        }
       })
       .catch(function(err) {
-        console.log('Could not load shared state (offline or local dev):', err.message);
+        console.log('Could not load shared state:', err.message);
       });
   }
 
@@ -108,9 +86,7 @@ var App = (function() {
     .then(function(data) {
       if (data.success) {
         if (statusEl) statusEl.textContent = 'Published! Everyone will see the latest data.';
-        setTimeout(function() {
-          if (statusEl) statusEl.textContent = '';
-        }, 5000);
+        setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 5000);
       } else {
         if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Unknown error');
       }
@@ -124,14 +100,13 @@ var App = (function() {
     var nav = document.getElementById('bottom-nav');
     if (!nav) return;
 
-    nav.innerHTML = '<button class="nav-btn active" data-tab="dashboard" onclick="App.switchTab(\'dashboard\')">' +
-      '<span class="nav-icon">&#127942;</span>' +
-      '<span class="nav-label">Dashboard</span>' +
-      '</button>' +
+    nav.innerHTML =
+      '<button class="nav-btn active" data-tab="dashboard" onclick="App.switchTab(\'dashboard\')">' +
+        '<span class="nav-icon">&#127942;</span><span class="nav-label">Dashboard</span></button>' +
       '<button class="nav-btn" data-tab="bracket" onclick="App.switchTab(\'bracket\')">' +
-      '<span class="nav-icon">&#127936;</span>' +
-      '<span class="nav-label">Bracket</span>' +
-      '</button>';
+        '<span class="nav-icon">&#127936;</span><span class="nav-label">Bracket</span></button>' +
+      '<button class="nav-btn" data-tab="rules" onclick="App.switchTab(\'rules\')">' +
+        '<span class="nav-icon">&#128220;</span><span class="nav-label">Rules</span></button>';
   }
 
   function switchTab(tab) {
@@ -139,19 +114,95 @@ var App = (function() {
 
     var buttons = document.querySelectorAll('.nav-btn');
     for (var i = 0; i < buttons.length; i++) {
-      buttons[i].className = buttons[i].getAttribute('data-tab') === tab ?
-        'nav-btn active' : 'nav-btn';
+      buttons[i].className = buttons[i].getAttribute('data-tab') === tab ? 'nav-btn active' : 'nav-btn';
     }
 
-    var dashboard = document.getElementById('tab-dashboard');
-    var bracket = document.getElementById('tab-bracket');
-    if (dashboard) dashboard.style.display = tab === 'dashboard' ? 'block' : 'none';
-    if (bracket) bracket.style.display = tab === 'bracket' ? 'block' : 'none';
+    var tabs = ['dashboard', 'bracket', 'rules'];
+    for (var i = 0; i < tabs.length; i++) {
+      var el = document.getElementById('tab-' + tabs[i]);
+      if (el) el.style.display = tabs[i] === tab ? 'block' : 'none';
+    }
 
     if (tab === 'dashboard') Dashboard.render();
     else if (tab === 'bracket') BracketView.render();
+    else if (tab === 'rules') renderRules();
   }
 
+  // === RULES PAGE ===
+  function renderRules() {
+    var container = document.getElementById('tab-rules');
+    if (!container) return;
+
+    var html = '<div class="rules-page">';
+    html += '<h2 class="rules-title">Contest Rules</h2>';
+
+    // Draft
+    html += '<div class="rules-section">';
+    html += '<h3>The Draft</h3>';
+    html += '<ul>';
+    html += '<li>All 64 NCAA tournament teams are distributed among ' + CONFIG.players.length + ' players via a <strong>snake draft</strong>.</li>';
+    html += '<li>Draft order is randomized before the draft begins.</li>';
+    html += '<li>Snake format: Round 1 goes 1-7, Round 2 goes 7-1, Round 3 goes 1-7, and so on.</li>';
+    html += '<li>The first drafter gets 10 teams. Everyone else gets 9 teams.</li>';
+    html += '</ul>';
+    html += '</div>';
+
+    // Scoring
+    html += '<div class="rules-section">';
+    html += '<h3>Scoring</h3>';
+    html += '<p>Each time one of your teams wins a game, you earn points based on the round:</p>';
+    html += '<table class="rules-table">';
+    html += '<tr><th>Round</th><th>Points Per Win</th></tr>';
+    var roundFullNames = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8', 'Final Four', 'Championship'];
+    for (var i = 0; i < CONFIG.roundPoints.length; i++) {
+      html += '<tr><td>' + roundFullNames[i] + '</td><td>' + CONFIG.roundPoints[i] + '</td></tr>';
+    }
+    html += '<tr class="rules-total"><td>Max per team (wins it all)</td><td>' + CONFIG.roundPoints.reduce(function(a,b){return a+b;}, 0) + '</td></tr>';
+    html += '</table>';
+    html += '</div>';
+
+    // Winner
+    html += '<div class="rules-section">';
+    html += '<h3>Winning</h3>';
+    html += '<ul>';
+    html += '<li>The player with the <strong>most total points</strong> at the end of the tournament wins.</li>';
+    html += '<li>Tiebreaker: the player with more teams still alive at the end of the tournament. If still tied, the player whose team went furthest wins.</li>';
+    html += '</ul>';
+    html += '</div>';
+
+    // Teams alive
+    html += '<div class="rules-section">';
+    html += '<h3>Teams Alive</h3>';
+    html += '<ul>';
+    html += '<li>When your team loses, they are eliminated and shown with a strikethrough.</li>';
+    html += '<li>Your "teams alive" count tracks how many of your drafted teams are still in the tournament.</li>';
+    html += '<li>"Max Possible" shows the theoretical maximum points you could earn if all your remaining teams win every game.</li>';
+    html += '</ul>';
+    html += '</div>';
+
+    // Players
+    html += '<div class="rules-section">';
+    html += '<h3>Players</h3>';
+    html += '<div class="rules-players">';
+    for (var i = 0; i < CONFIG.players.length; i++) {
+      var p = CONFIG.players[i];
+      var teamCount = getTeamsForPlayer(p.id).length;
+      html += '<div class="rules-player-row">';
+      html += '<span class="player-badge" style="background:' + p.color + '">' + p.id + '</span>';
+      html += '<span>' + p.name + '</span>';
+      if (teamCount > 0) {
+        html += '<span style="color:#888;font-size:12px;">' + teamCount + ' teams</span>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '</div>';
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  // === ADMIN ===
   function toggleAdmin() {
     adminOpen = !adminOpen;
     var overlay = document.getElementById('admin-overlay');
@@ -166,60 +217,46 @@ var App = (function() {
     if (!content) return;
 
     var html = '';
-
     html += '<div class="admin-tabs">';
     html += '<button class="admin-tab active" onclick="App.showAdminSection(\'draft\', this)">Draft</button>';
     html += '<button class="admin-tab" onclick="App.showAdminSection(\'results\', this)">Results</button>';
     html += '<button class="admin-tab" onclick="App.showAdminSection(\'settings\', this)">Settings</button>';
     html += '</div>';
 
-    // Draft section
-    html += '<div id="admin-draft" class="admin-section">';
-    html += '<div id="draft-content"></div>';
-    html += '</div>';
+    html += '<div id="admin-draft" class="admin-section"><div id="draft-content"></div></div>';
 
-    // Results section
     html += '<div id="admin-results" class="admin-section" style="display:none;">';
     html += renderResultsEntry();
     html += '</div>';
 
-    // Settings section
+    // Settings
     html += '<div id="admin-settings" class="admin-section" style="display:none;">';
-
-    // Publish
     html += '<h3 style="margin-bottom:8px;">Share with Everyone</h3>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:8px;">Publish your draft and results so everyone sees the same data when they open the link.</p>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:8px;">Publish your draft and results so everyone sees the same data.</p>';
     html += '<button class="btn btn-primary" onclick="App.publishState()">Publish to Server</button>';
     html += '<button class="btn btn-secondary" onclick="App.loadSharedState()">Pull Latest from Server</button>';
     html += '<div id="publish-status" style="font-size:12px;color:#22c55e;margin-top:6px;"></div>';
-    html += '<div id="last-published" style="font-size:11px;color:#888;margin-top:4px;"></div>';
 
-    // Font size
     html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;">';
     html += '<h3 style="margin-bottom:8px;">Display</h3>';
     html += '<div style="display:flex;gap:6px;margin-bottom:12px;">';
     html += '<button class="btn ' + (fontSize === 'normal' ? 'btn-primary' : 'btn-secondary') + '" onclick="App.setFontSize(\'normal\')">Normal</button>';
     html += '<button class="btn ' + (fontSize === 'large' ? 'btn-primary' : 'btn-secondary') + '" onclick="App.setFontSize(\'large\')">Large</button>';
     html += '<button class="btn ' + (fontSize === 'xlarge' ? 'btn-primary' : 'btn-secondary') + '" onclick="App.setFontSize(\'xlarge\')">X-Large</button>';
-    html += '</div>';
-    html += '</div>';
+    html += '</div></div>';
 
-    // Refresh
     html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid #333;">';
     html += '<h3 style="margin-bottom:8px;">Scores</h3>';
     html += '<button class="btn btn-secondary" onclick="API.fetchScores()">Force Refresh from ESPN</button>';
     html += '</div>';
 
-    // Danger zone
     html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;">';
     html += '<h3 style="margin-bottom:8px;color:#ef4444;">Danger Zone</h3>';
     html += '<button class="btn btn-danger" onclick="App.confirmResetDraft()">Reset Draft Only</button>';
-    html += '<p style="font-size:11px;color:#888;margin:4px 0 12px;">Clears all team assignments. You will need to re-draft.</p>';
+    html += '<p style="font-size:11px;color:#888;margin:4px 0 12px;">Clears all team assignments.</p>';
     html += '<button class="btn btn-danger" onclick="App.confirmResetAll()">Reset Everything</button>';
-    html += '<p style="font-size:11px;color:#888;margin:4px 0 0;">Clears draft AND all game results. Full fresh start.</p>';
-    html += '</div>';
-
-    html += '</div>';
+    html += '<p style="font-size:11px;color:#888;margin:4px 0 0;">Clears draft AND all game results.</p>';
+    html += '</div></div>';
 
     content.innerHTML = html;
     Draft.render();
@@ -227,24 +264,20 @@ var App = (function() {
 
   function showAdminSection(section, btn) {
     var sections = document.querySelectorAll('.admin-section');
-    for (var i = 0; i < sections.length; i++) {
-      sections[i].style.display = 'none';
-    }
+    for (var i = 0; i < sections.length; i++) sections[i].style.display = 'none';
     var tabs = document.querySelectorAll('.admin-tab');
-    for (var i = 0; i < tabs.length; i++) {
-      tabs[i].className = 'admin-tab';
-    }
+    for (var i = 0; i < tabs.length; i++) tabs[i].className = 'admin-tab';
     var el = document.getElementById('admin-' + section);
     if (el) el.style.display = 'block';
     if (btn) btn.className = 'admin-tab active';
-
     if (section === 'draft') Draft.render();
   }
 
+  // === RESULTS ENTRY WITH SCORES ===
   function renderResultsEntry() {
     var state = State.get();
     var html = '<h3>Manual Results Entry</h3>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Click the winning team to set results. Remember to Publish after updating.</p>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Enter scores and click the winning team. Remember to Publish after updating.</p>';
 
     var gameKeys = Object.keys(BRACKET);
     gameKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
@@ -259,32 +292,80 @@ var App = (function() {
       var t2 = TEAMS[teams.team2];
       var roundName = CONFIG.roundNames[BRACKET[gId].round - 1];
       var region = BRACKET[gId].region;
-
       var statusClass = g.status === 'final' ? 'result-final' : 'result-pending';
 
-      html += '<div class="result-row ' + statusClass + '">';
+      html += '<div class="result-row ' + statusClass + '" id="result-' + gId + '">';
       html += '<div class="result-meta">' + roundName + ' - ' + region + '</div>';
-      html += '<div class="result-matchup">';
+      html += '<div class="result-matchup-scores">';
 
+      // Team 1 with score
       var w1Class = g.winner === teams.team1 ? ' winner-btn' : '';
-      html += '<button class="result-team' + w1Class + '" ';
-      html += 'onclick="App.setWinner(\'' + gId + '\', \'' + teams.team1 + '\')">';
+      html += '<div class="result-team-wrap">';
+      html += '<button class="result-team' + w1Class + '" onclick="App.pickWinner(\'' + gId + '\', \'' + teams.team1 + '\')">';
       html += '(' + (t1 ? t1.seed : '?') + ') ' + (t1 ? t1.name : teams.team1);
       html += '</button>';
+      html += '<input type="number" class="score-input" id="score1-' + gId + '" value="' + (g.score1 !== null ? g.score1 : '') + '" placeholder="-" min="0" max="200" onchange="App.updateScore(\'' + gId + '\')">';
+      html += '</div>';
 
       html += '<span class="result-vs">vs</span>';
 
+      // Team 2 with score
       var w2Class = g.winner === teams.team2 ? ' winner-btn' : '';
-      html += '<button class="result-team' + w2Class + '" ';
-      html += 'onclick="App.setWinner(\'' + gId + '\', \'' + teams.team2 + '\')">';
+      html += '<div class="result-team-wrap">';
+      html += '<button class="result-team' + w2Class + '" onclick="App.pickWinner(\'' + gId + '\', \'' + teams.team2 + '\')">';
       html += '(' + (t2 ? t2.seed : '?') + ') ' + (t2 ? t2.name : teams.team2);
       html += '</button>';
+      html += '<input type="number" class="score-input" id="score2-' + gId + '" value="' + (g.score2 !== null ? g.score2 : '') + '" placeholder="-" min="0" max="200" onchange="App.updateScore(\'' + gId + '\')">';
+      html += '</div>';
 
       html += '</div>';
       html += '</div>';
     }
 
     return html;
+  }
+
+  function pickWinner(gameId, teamKey) {
+    // Read scores from inputs
+    var s1El = document.getElementById('score1-' + gameId);
+    var s2El = document.getElementById('score2-' + gameId);
+    var score1 = s1El ? parseInt(s1El.value) || null : null;
+    var score2 = s2El ? parseInt(s2El.value) || null : null;
+
+    State.setGameResult(gameId, teamKey, score1, score2, true);
+
+    // Re-render just the row styling without full admin re-render (preserves scroll)
+    var row = document.getElementById('result-' + gameId);
+    if (row) {
+      row.className = 'result-row result-final';
+      var buttons = row.querySelectorAll('.result-team');
+      var teams = State.getGameTeams(gameId);
+      for (var i = 0; i < buttons.length; i++) {
+        var isFirst = i === 0;
+        var btnTeam = isFirst ? teams.team1 : teams.team2;
+        buttons[i].className = btnTeam === teamKey ? 'result-team winner-btn' : 'result-team';
+      }
+    }
+
+    if (activeTab === 'dashboard') Dashboard.render();
+    if (activeTab === 'bracket') BracketView.render();
+  }
+
+  function updateScore(gameId) {
+    var s1El = document.getElementById('score1-' + gameId);
+    var s2El = document.getElementById('score2-' + gameId);
+    var score1 = s1El ? parseInt(s1El.value) || null : null;
+    var score2 = s2El ? parseInt(s2El.value) || null : null;
+
+    var state = State.get();
+    var g = state.games[gameId];
+    if (g) {
+      g.score1 = score1;
+      g.score2 = score2;
+      State.save();
+    }
+
+    if (activeTab === 'bracket') BracketView.render();
   }
 
   function setWinner(gameId, teamKey) {
@@ -295,7 +376,7 @@ var App = (function() {
   }
 
   function confirmResetDraft() {
-    if (confirm('Reset the draft? All team assignments will be cleared. This cannot be undone.')) {
+    if (confirm('Reset the draft? All team assignments will be cleared.')) {
       Draft.resetDraft();
       renderAdmin();
       switchTab(activeTab);
@@ -303,7 +384,7 @@ var App = (function() {
   }
 
   function confirmResetAll() {
-    if (confirm('Reset EVERYTHING? Draft and all game results will be cleared. This cannot be undone.')) {
+    if (confirm('Reset EVERYTHING? Draft and all game results will be cleared.')) {
       State.resetAll();
       Draft.resetDraft();
       renderAdmin();
@@ -311,7 +392,6 @@ var App = (function() {
     }
   }
 
-  // Font size
   function setFontSize(size) {
     fontSize = size;
     document.documentElement.setAttribute('data-fontsize', size);
@@ -335,6 +415,8 @@ var App = (function() {
     toggleAdmin: toggleAdmin,
     showAdminSection: showAdminSection,
     setWinner: setWinner,
+    pickWinner: pickWinner,
+    updateScore: updateScore,
     confirmResetDraft: confirmResetDraft,
     confirmResetAll: confirmResetAll,
     publishState: publishState,
