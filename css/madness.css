@@ -482,6 +482,15 @@ body {
   text-align: center;
 }
 
+.round-date {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-top: 1px;
+}
+
 /* === MATCHUP === */
 .matchup {
   border-radius: 4px;

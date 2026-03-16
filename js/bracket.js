@@ -57,14 +57,13 @@ var BracketView = (function() {
   function renderRegion(region) {
     var state = State.get();
     var rounds = getRegionRounds(region);
-    var roundLabels = ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8'];
 
     var html = '<div class="bracket-region">';
     html += '<div class="bracket-horizontal">';
 
     for (var r = 0; r < rounds.length; r++) {
       html += '<div class="bracket-col" data-round="' + (r + 1) + '">';
-      html += '<div class="round-header">' + roundLabels[r] + '</div>';
+      html += '<div class="round-header">' + CONFIG.roundFullNames[r] + '<div class="round-date">' + CONFIG.roundDates[r] + '</div></div>';
       html += '<div class="bracket-col-games">';
       for (var g = 0; g < rounds[r].length; g++) {
         html += '<div class="bracket-game-wrap">';
@@ -173,13 +172,13 @@ var BracketView = (function() {
 
     // Left semi
     html += '<div class="ff-side">';
-    html += '<div class="ff-side-label">East / West Winner</div>';
+    html += '<div class="ff-side-label">Semifinal<div class="round-date">' + CONFIG.roundDates[4] + '</div></div>';
     html += renderMatchup('61', state);
     html += '</div>';
 
     // Center - championship
     html += '<div class="ff-center">';
-    html += '<div class="ff-center-label">National Championship</div>';
+    html += '<div class="ff-center-label">National Championship<div class="round-date">' + CONFIG.roundDates[5] + '</div></div>';
     html += renderMatchup('63', state);
 
     // Champion banner
@@ -203,7 +202,7 @@ var BracketView = (function() {
 
     // Right semi
     html += '<div class="ff-side">';
-    html += '<div class="ff-side-label">South / Midwest Winner</div>';
+    html += '<div class="ff-side-label">Semifinal<div class="round-date">' + CONFIG.roundDates[4] + '</div></div>';
     html += renderMatchup('62', state);
     html += '</div>';
 

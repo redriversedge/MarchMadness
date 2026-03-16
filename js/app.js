@@ -273,11 +273,12 @@ var App = (function() {
     if (section === 'draft') Draft.render();
   }
 
-  // === RESULTS ENTRY WITH SCORES ===
+  // === RESULTS ENTRY (fallback - scores come from ESPN API) ===
   function renderResultsEntry() {
     var state = State.get();
     var html = '<h3>Manual Results Entry</h3>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Enter scores and click the winning team. Remember to Publish after updating.</p>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:4px;">Scores pull automatically from ESPN. Use this only if a game result is missing.</p>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Click the winning team to set the result. Publish after updating.</p>';
 
     var gameKeys = Object.keys(BRACKET);
     gameKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
@@ -294,78 +295,33 @@ var App = (function() {
       var region = BRACKET[gId].region;
       var statusClass = g.status === 'final' ? 'result-final' : 'result-pending';
 
-      html += '<div class="result-row ' + statusClass + '" id="result-' + gId + '">';
-      html += '<div class="result-meta">' + roundName + ' - ' + region + '</div>';
-      html += '<div class="result-matchup-scores">';
+      // Show score if available
+      var score1Str = g.score1 !== null ? ' (' + g.score1 + ')' : '';
+      var score2Str = g.score2 !== null ? ' (' + g.score2 + ')' : '';
 
-      // Team 1 with score
+      html += '<div class="result-row ' + statusClass + '">';
+      html += '<div class="result-meta">' + roundName + ' - ' + region + '</div>';
+      html += '<div class="result-matchup">';
+
       var w1Class = g.winner === teams.team1 ? ' winner-btn' : '';
-      html += '<div class="result-team-wrap">';
-      html += '<button class="result-team' + w1Class + '" onclick="App.pickWinner(\'' + gId + '\', \'' + teams.team1 + '\')">';
-      html += '(' + (t1 ? t1.seed : '?') + ') ' + (t1 ? t1.name : teams.team1);
+      html += '<button class="result-team' + w1Class + '" ';
+      html += 'onclick="App.setWinner(\'' + gId + '\', \'' + teams.team1 + '\')">';
+      html += '(' + (t1 ? t1.seed : '?') + ') ' + (t1 ? t1.name : teams.team1) + score1Str;
       html += '</button>';
-      html += '<input type="number" class="score-input" id="score1-' + gId + '" value="' + (g.score1 !== null ? g.score1 : '') + '" placeholder="-" min="0" max="200" onchange="App.updateScore(\'' + gId + '\')">';
-      html += '</div>';
 
       html += '<span class="result-vs">vs</span>';
 
-      // Team 2 with score
       var w2Class = g.winner === teams.team2 ? ' winner-btn' : '';
-      html += '<div class="result-team-wrap">';
-      html += '<button class="result-team' + w2Class + '" onclick="App.pickWinner(\'' + gId + '\', \'' + teams.team2 + '\')">';
-      html += '(' + (t2 ? t2.seed : '?') + ') ' + (t2 ? t2.name : teams.team2);
+      html += '<button class="result-team' + w2Class + '" ';
+      html += 'onclick="App.setWinner(\'' + gId + '\', \'' + teams.team2 + '\')">';
+      html += '(' + (t2 ? t2.seed : '?') + ') ' + (t2 ? t2.name : teams.team2) + score2Str;
       html += '</button>';
-      html += '<input type="number" class="score-input" id="score2-' + gId + '" value="' + (g.score2 !== null ? g.score2 : '') + '" placeholder="-" min="0" max="200" onchange="App.updateScore(\'' + gId + '\')">';
-      html += '</div>';
 
       html += '</div>';
       html += '</div>';
     }
 
     return html;
-  }
-
-  function pickWinner(gameId, teamKey) {
-    // Read scores from inputs
-    var s1El = document.getElementById('score1-' + gameId);
-    var s2El = document.getElementById('score2-' + gameId);
-    var score1 = s1El ? parseInt(s1El.value) || null : null;
-    var score2 = s2El ? parseInt(s2El.value) || null : null;
-
-    State.setGameResult(gameId, teamKey, score1, score2, true);
-
-    // Re-render just the row styling without full admin re-render (preserves scroll)
-    var row = document.getElementById('result-' + gameId);
-    if (row) {
-      row.className = 'result-row result-final';
-      var buttons = row.querySelectorAll('.result-team');
-      var teams = State.getGameTeams(gameId);
-      for (var i = 0; i < buttons.length; i++) {
-        var isFirst = i === 0;
-        var btnTeam = isFirst ? teams.team1 : teams.team2;
-        buttons[i].className = btnTeam === teamKey ? 'result-team winner-btn' : 'result-team';
-      }
-    }
-
-    if (activeTab === 'dashboard') Dashboard.render();
-    if (activeTab === 'bracket') BracketView.render();
-  }
-
-  function updateScore(gameId) {
-    var s1El = document.getElementById('score1-' + gameId);
-    var s2El = document.getElementById('score2-' + gameId);
-    var score1 = s1El ? parseInt(s1El.value) || null : null;
-    var score2 = s2El ? parseInt(s2El.value) || null : null;
-
-    var state = State.get();
-    var g = state.games[gameId];
-    if (g) {
-      g.score1 = score1;
-      g.score2 = score2;
-      State.save();
-    }
-
-    if (activeTab === 'bracket') BracketView.render();
   }
 
   function setWinner(gameId, teamKey) {
@@ -415,8 +371,6 @@ var App = (function() {
     toggleAdmin: toggleAdmin,
     showAdminSection: showAdminSection,
     setWinner: setWinner,
-    pickWinner: pickWinner,
-    updateScore: updateScore,
     confirmResetDraft: confirmResetDraft,
     confirmResetAll: confirmResetAll,
     publishState: publishState,
