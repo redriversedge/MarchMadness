@@ -96,11 +96,14 @@ var TEAMS = {
 };
 
 // Draft assignments: team key -> player ID
-// Update this after the snake draft is complete
-var DRAFT_ASSIGNMENTS = {
-  // Example: 'duke': 'CB', 'auburn': 'CH', etc.
-  // Run the draft tool to populate this
-};
+// Loaded from localStorage if draft was done in-app, otherwise hardcoded here
+var DRAFT_ASSIGNMENTS = (function() {
+  try {
+    var saved = localStorage.getItem('mm_draft');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return {};
+})();
 
 // Bracket structure: defines the 63 games
 // Each game references two source slots (team keys or winner of previous game)

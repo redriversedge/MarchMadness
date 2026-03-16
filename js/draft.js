@@ -79,18 +79,46 @@ var Draft = (function() {
     var drafter = getCurrentDrafter();
     if (!drafter) return;
     picks.push({ teamKey: teamKey, playerId: drafter });
+    saveDraftToStorage();
     render();
 
     // Check if draft is complete
     if (picks.length >= Object.keys(TEAMS).length) {
-      exportDraft();
+      finalizeDraft();
     }
   }
 
   function undoPick() {
     if (isLocked || picks.length === 0) return;
     picks.pop();
+    saveDraftToStorage();
     render();
+  }
+
+  function saveDraftToStorage() {
+    var assignments = {};
+    for (var i = 0; i < picks.length; i++) {
+      assignments[picks[i].teamKey] = picks[i].playerId;
+    }
+    try {
+      localStorage.setItem('mm_draft', JSON.stringify(assignments));
+    } catch(e) {}
+    // Update the live object so dashboard/bracket see changes immediately
+    var keys = Object.keys(assignments);
+    // Clear and repopulate DRAFT_ASSIGNMENTS
+    var existing = Object.keys(DRAFT_ASSIGNMENTS);
+    for (var i = 0; i < existing.length; i++) {
+      delete DRAFT_ASSIGNMENTS[existing[i]];
+    }
+    for (var i = 0; i < keys.length; i++) {
+      DRAFT_ASSIGNMENTS[keys[i]] = assignments[keys[i]];
+    }
+  }
+
+  function finalizeDraft() {
+    saveDraftToStorage();
+    isLocked = true;
+    exportDraft();
   }
 
   function exportDraft() {
