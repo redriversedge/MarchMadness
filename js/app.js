@@ -99,8 +99,14 @@ var App = (function() {
 
     // Settings section
     html += '<div id="admin-settings" class="admin-section" style="display:none;">';
-    html += '<button class="btn btn-primary" onclick="API.fetchScores()">Force Refresh</button>';
-    html += '<button class="btn btn-danger" onclick="App.confirmReset()">Reset All Data</button>';
+    html += '<button class="btn btn-primary" onclick="API.fetchScores()">Force Refresh Scores</button>';
+    html += '<div style="margin-top:16px;padding-top:16px;border-top:1px solid #333;">';
+    html += '<h3 style="margin-bottom:8px;color:#ef4444;">Danger Zone</h3>';
+    html += '<button class="btn btn-danger" onclick="App.confirmResetDraft()">Reset Draft Only</button>';
+    html += '<p style="font-size:11px;color:#888;margin:4px 0 12px;">Clears all team assignments. You will need to re-draft.</p>';
+    html += '<button class="btn btn-danger" onclick="App.confirmResetAll()">Reset Everything</button>';
+    html += '<p style="font-size:11px;color:#888;margin:4px 0 0;">Clears draft AND all game results. Full fresh start.</p>';
+    html += '</div>';
     html += '</div>';
 
     content.innerHTML = html;
@@ -178,9 +184,18 @@ var App = (function() {
     if (activeTab === 'bracket') BracketView.render();
   }
 
-  function confirmReset() {
-    if (confirm('Reset all game results? This cannot be undone.')) {
-      State.reset();
+  function confirmResetDraft() {
+    if (confirm('Reset the draft? All team assignments will be cleared. This cannot be undone.')) {
+      Draft.resetDraft();
+      renderAdmin();
+      switchTab(activeTab);
+    }
+  }
+
+  function confirmResetAll() {
+    if (confirm('Reset EVERYTHING? Draft and all game results will be cleared. This cannot be undone.')) {
+      State.resetAll();
+      Draft.resetDraft();
       renderAdmin();
       switchTab(activeTab);
     }
@@ -192,7 +207,8 @@ var App = (function() {
     toggleAdmin: toggleAdmin,
     showAdminSection: showAdminSection,
     setWinner: setWinner,
-    confirmReset: confirmReset
+    confirmResetDraft: confirmResetDraft,
+    confirmResetAll: confirmResetAll
   };
 })();
 

@@ -355,23 +355,52 @@ body {
 .empty-state h3 { color: var(--text); margin-bottom: 8px; }
 .empty-state p { font-size: 14px; line-height: 1.5; }
 
-/* === REGION TABS (Bracket) === */
+/* === BRACKET CONTROLS === */
+.bracket-controls {
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--bg-card);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.view-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.view-btn.active {
+  background: #253252;
+  color: #fff;
+}
+
 .region-tabs {
   display: flex;
-  padding: 12px 16px 0;
-  gap: 4px;
+  gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .region-tabs::-webkit-scrollbar { display: none; }
 
 .region-tab {
-  padding: 8px 16px;
+  padding: 6px 14px;
   border: none;
   background: var(--bg-card);
   color: var(--text-dim);
-  border-radius: 8px 8px 0 0;
-  font-size: 13px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -381,80 +410,86 @@ body {
   color: #fff;
 }
 
-/* === BRACKET === */
+/* === BRACKET REGION VIEW (CBS-style horizontal) === */
 .bracket-region {
   padding: 0 8px 16px;
-}
-
-.bracket-rounds {
-  display: flex;
-  gap: 4px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.bracket-horizontal {
+  display: flex;
+  gap: 0;
+  min-width: fit-content;
   padding: 8px 0;
 }
 
-.bracket-round {
+.bracket-col {
   flex-shrink: 0;
-  min-width: 160px;
+  min-width: 170px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
-.bracket-round[data-round="1"] { gap: 4px; }
-.bracket-round[data-round="2"] .matchup { margin-top: 24px; }
-.bracket-round[data-round="2"] .matchup:first-of-type { margin-top: 20px; }
-.bracket-round[data-round="3"] .matchup { margin-top: 72px; }
-.bracket-round[data-round="3"] .matchup:first-of-type { margin-top: 64px; }
-.bracket-round[data-round="4"] .matchup { margin-top: 168px; }
-.bracket-round[data-round="4"] .matchup:first-of-type { margin-top: 152px; }
+.bracket-col-games {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  flex: 1;
+}
+
+.bracket-game-wrap {
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+}
+
+/* Spacing: each subsequent round's games are vertically centered between their feeders */
+.bracket-col[data-round="1"] .bracket-game-wrap { padding: 2px 4px; }
+.bracket-col[data-round="2"] .bracket-game-wrap { padding: 16px 4px; }
+.bracket-col[data-round="3"] .bracket-game-wrap { padding: 48px 4px; }
+.bracket-col[data-round="4"] .bracket-game-wrap { padding: 112px 4px; }
 
 .round-header {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 4px 8px;
+  padding: 4px 8px 6px;
   text-align: center;
 }
 
 /* === MATCHUP === */
 .matchup {
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
   border: 1px solid #2a2a3a;
+  min-width: 160px;
 }
 .matchup.live { border-color: #ef4444; }
 
 .team-slot {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+  gap: 4px;
+  padding: 5px 6px;
   border-left: 3px solid transparent;
   font-size: 12px;
-  min-height: 28px;
+  min-height: 26px;
 }
 
 .team-slot + .team-slot { border-top: 1px solid #2a2a3a; }
-
 .team-slot.tbd { color: var(--text-muted); font-style: italic; }
-
-.team-slot.winner {
-  font-weight: 700;
-}
-
-.team-slot.eliminated {
-  opacity: 0.4;
-  text-decoration: line-through;
-}
+.team-slot.winner { font-weight: 700; }
+.team-slot.eliminated { opacity: 0.35; }
+.team-slot.eliminated .team-name { text-decoration: line-through; }
 
 .team-seed {
   color: var(--text-dim);
   font-size: 10px;
-  min-width: 20px;
+  min-width: 18px;
+  text-align: right;
 }
 
 .team-name {
@@ -476,55 +511,205 @@ body {
 .team-score {
   font-weight: 700;
   color: #fff;
-  min-width: 20px;
+  min-width: 18px;
   text-align: right;
+  font-size: 11px;
 }
 
-/* === FINAL FOUR === */
-.bracket-final-four {
-  padding: 16px;
+/* === COMPACT MATCHUP (for full bracket view) === */
+.matchup-sm {
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #2a2a3a;
+  font-size: 10px;
+}
+.matchup-sm.live { border-color: #ef4444; }
+
+.team-slot-sm {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 400px;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 4px;
+  min-height: 18px;
+  border-left: 2px solid #555;
+}
+.team-slot-sm + .team-slot-sm { border-top: 1px solid #222; }
+.team-slot-sm.tbd { color: var(--text-muted); font-style: italic; font-size: 9px; }
+.team-slot-sm.winner { font-weight: 700; }
+.team-slot-sm.eliminated { opacity: 0.3; }
+.team-slot-sm.eliminated .name-sm { text-decoration: line-through; }
+
+.seed-sm { color: var(--text-dim); font-size: 9px; min-width: 12px; text-align: right; }
+.name-sm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+.score-sm { font-weight: 700; color: #fff; font-size: 9px; min-width: 14px; text-align: right; }
+
+/* === FINAL FOUR (region tab view) === */
+.final-four-view {
+  padding: 16px;
+}
+
+.ff-bracket-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 700px;
   margin: 0 auto;
 }
 
-.ff-section .matchup {
-  max-width: 300px;
-  margin: 0 auto;
+.ff-side {
+  flex: 1;
+  max-width: 220px;
 }
 
-.ff-championship .round-header {
-  font-size: 14px;
+.ff-side-label, .ff-center-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.ff-center {
+  flex: 1;
+  max-width: 240px;
+}
+
+.ff-center-label {
   color: var(--gold);
+  font-size: 11px;
 }
 
 .champion-banner {
   text-align: center;
-  padding: 20px;
+  padding: 16px;
+  margin-top: 12px;
   background: var(--bg-card);
-  border-radius: 10px;
+  border-radius: 8px;
   border: 2px solid var(--gold);
 }
 
 .champion-label {
-  font-size: 12px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--gold);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .champion-team {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 800;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .champion-owner {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--text-dim);
+}
+
+/* === FULL BRACKET VIEW === */
+.full-bracket {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px;
+  min-height: 600px;
+}
+
+.full-bracket-half {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.full-bracket-center {
+  flex-shrink: 0;
+  width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.full-region {
+  flex: 1;
+}
+
+.full-region-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  padding: 4px 8px;
+  text-align: center;
+}
+
+.full-region-bracket {
+  display: flex;
+  gap: 0;
+}
+
+.full-region-bracket.right {
+  flex-direction: row;
+}
+
+.bracket-col-sm {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  min-width: 100px;
+  padding: 0 1px;
+}
+
+.bracket-game-wrap-sm {
+  padding: 1px 2px;
+}
+
+/* Full bracket Final Four center */
+.ff-bracket {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.ff-semi { width: 130px; }
+.ff-champ { width: 130px; }
+
+.ff-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.ff-champ-label { color: var(--gold); }
+
+.ff-champion {
+  text-align: center;
+  padding: 4px;
+  margin-top: 4px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.champion-crown {
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--gold);
+  letter-spacing: 1px;
 }
 
 /* === ADMIN OVERLAY === */
@@ -799,49 +984,47 @@ body {
 
 /* === RESPONSIVE === */
 @media (max-width: 767px) {
-  .bracket-rounds {
+  .bracket-horizontal {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bracket-col[data-round="2"] .bracket-game-wrap,
+  .bracket-col[data-round="3"] .bracket-game-wrap,
+  .bracket-col[data-round="4"] .bracket-game-wrap {
+    padding: 2px 4px;
+  }
+
+  .bracket-col { min-width: unset; }
+
+  .ff-bracket-layout {
     flex-direction: column;
     gap: 16px;
   }
 
-  .bracket-round {
-    min-width: unset;
+  .ff-side, .ff-center { max-width: 100%; }
+
+  .full-bracket {
+    flex-direction: column;
+    gap: 24px;
   }
 
-  .bracket-round[data-round="2"] .matchup,
-  .bracket-round[data-round="3"] .matchup,
-  .bracket-round[data-round="4"] .matchup {
-    margin-top: 0;
+  .full-bracket-half {
+    flex-direction: column;
   }
 
-  .bracket-round[data-round="2"] .matchup:first-of-type,
-  .bracket-round[data-round="3"] .matchup:first-of-type,
-  .bracket-round[data-round="4"] .matchup:first-of-type {
-    margin-top: 0;
+  .full-bracket-center {
+    width: 100%;
   }
 
-  .bracket-round .matchup {
-    margin-bottom: 4px;
-  }
-
-  .card-rounds {
-    gap: 2px;
-  }
-
-  .round-box {
-    padding: 4px 1px;
-  }
-
-  .round-label { font-size: 9px; }
-  .round-pts { font-size: 12px; }
-}
-
-@media (min-width: 768px) {
-  .bracket-rounds {
+  .ff-bracket {
+    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: center;
   }
 
-  .bracket-round {
-    min-width: 180px;
-  }
+  .card-rounds { gap: 2px; }
+  .round-box { padding: 4px 1px; }
+  .round-label { font-size: 9px; }
+  .round-pts { font-size: 12px; }
 }

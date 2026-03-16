@@ -284,11 +284,20 @@ var Draft = (function() {
     container.innerHTML = html;
   }
 
+  function resetDraft() {
+    draftOrder = [];
+    picks = [];
+    isLocked = false;
+    State.resetDraft();
+    render();
+  }
+
   return {
     init: init,
     randomizeOrder: randomizeOrder,
     makePick: makePick,
     undoPick: undoPick,
+    resetDraft: resetDraft,
     render: render
   };
 })();

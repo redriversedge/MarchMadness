@@ -87,6 +87,22 @@ var State = (function() {
     save();
   }
 
+  function resetDraft() {
+    try {
+      localStorage.removeItem('mm_draft');
+    } catch(e) {}
+    // Clear the live DRAFT_ASSIGNMENTS object
+    var keys = Object.keys(DRAFT_ASSIGNMENTS);
+    for (var i = 0; i < keys.length; i++) {
+      delete DRAFT_ASSIGNMENTS[keys[i]];
+    }
+  }
+
+  function resetAll() {
+    resetDraft();
+    reset();
+  }
+
   function getGameTeams(gameId) {
     var game = BRACKET[gameId];
     if (!game) return { team1: null, team2: null };
@@ -125,6 +141,8 @@ var State = (function() {
     setGameResult: setGameResult,
     setGameStatus: setGameStatus,
     reset: reset,
+    resetDraft: resetDraft,
+    resetAll: resetAll,
     getGameTeams: getGameTeams,
     isTeamEliminated: isTeamEliminated
   };
