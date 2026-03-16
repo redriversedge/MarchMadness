@@ -63,22 +63,33 @@ var State = (function() {
   function setGameResult(gameId, winner, score1, score2, isManual) {
     var g = state.games[gameId];
     if (!g) return;
-    if (g.manualOverride && !isManual) return; // don't overwrite manual entries
+    // ESPN final results always take priority over manual entries
+    // Manual entries are placeholders until ESPN data arrives
     g.winner = winner;
-    g.score1 = score1 || null;
-    g.score2 = score2 || null;
+    g.score1 = score1 || g.score1 || null;
+    g.score2 = score2 || g.score2 || null;
     g.status = 'final';
-    g.manualOverride = !!isManual;
+    g.manualOverride = isManual && !score1; // only flag manual if no ESPN scores yet
     save();
   }
 
   function setGameStatus(gameId, status, score1, score2) {
     var g = state.games[gameId];
     if (!g) return;
-    if (g.manualOverride) return;
     g.status = status;
-    g.score1 = score1 || g.score1;
-    g.score2 = score2 || g.score2;
+    if (score1 !== null && score1 !== undefined) g.score1 = score1;
+    if (score2 !== null && score2 !== undefined) g.score2 = score2;
+    save();
+  }
+
+  function clearGameResult(gameId) {
+    var g = state.games[gameId];
+    if (!g) return;
+    g.winner = null;
+    g.score1 = null;
+    g.score2 = null;
+    g.status = 'scheduled';
+    g.manualOverride = false;
     save();
   }
 
@@ -143,6 +154,7 @@ var State = (function() {
     reset: reset,
     resetDraft: resetDraft,
     resetAll: resetAll,
+    clearGameResult: clearGameResult,
     getGameTeams: getGameTeams,
     isTeamEliminated: isTeamEliminated
   };

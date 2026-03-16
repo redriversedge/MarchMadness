@@ -222,12 +222,29 @@ var App = (function() {
     if (section === 'draft') Draft.render();
   }
 
-  // === RESULTS ENTRY (fallback - scores come from ESPN API) ===
+  // === RESULTS ENTRY (PIN-protected, ESPN auto-corrects) ===
+  var resultsUnlocked = false;
+
   function renderResultsEntry() {
     var state = State.get();
-    var html = '<h3>Manual Results Entry</h3>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:4px;">Scores pull automatically from ESPN. Use this only if a game result is missing.</p>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Click the winning team to set the result. Publish after updating.</p>';
+    var html = '';
+
+    if (!resultsUnlocked) {
+      html += '<div class="results-lock">';
+      html += '<h3>Manual Results Entry</h3>';
+      html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Enter PIN to make changes. ESPN will auto-correct any mistakes when official results are available.</p>';
+      html += '<div style="display:flex;gap:8px;align-items:center;">';
+      html += '<input type="password" id="results-pin" placeholder="Enter PIN" class="pin-input" onkeydown="if(event.key===\'Enter\')App.unlockResults()">';
+      html += '<button class="btn btn-primary" onclick="App.unlockResults()">Unlock</button>';
+      html += '</div>';
+      html += '<div id="pin-error" style="font-size:12px;color:#ef4444;margin-top:6px;"></div>';
+      html += '</div>';
+      return html;
+    }
+
+    html += '<h3>Manual Results Entry</h3>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:4px;">ESPN auto-corrects results when official scores are available.</p>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Click the winning team. Click "Undo" to clear a result.</p>';
 
     var gameKeys = Object.keys(BRACKET);
     gameKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
@@ -244,12 +261,16 @@ var App = (function() {
       var region = BRACKET[gId].region;
       var statusClass = g.status === 'final' ? 'result-final' : 'result-pending';
 
-      // Show score if available
       var score1Str = g.score1 !== null ? ' (' + g.score1 + ')' : '';
       var score2Str = g.score2 !== null ? ' (' + g.score2 + ')' : '';
 
       html += '<div class="result-row ' + statusClass + '">';
-      html += '<div class="result-meta">' + roundName + ' - ' + region + '</div>';
+      html += '<div class="result-meta">';
+      html += roundName + ' - ' + region;
+      if (g.status === 'final') {
+        html += '<button class="undo-btn" onclick="App.undoResult(\'' + gId + '\')">Undo</button>';
+      }
+      html += '</div>';
       html += '<div class="result-matchup">';
 
       var w1Class = g.winner === teams.team1 ? ' winner-btn' : '';
@@ -273,9 +294,33 @@ var App = (function() {
     return html;
   }
 
+  function unlockResults() {
+    var pinEl = document.getElementById('results-pin');
+    var errEl = document.getElementById('pin-error');
+    if (!pinEl) return;
+    if (pinEl.value === '1126') {
+      resultsUnlocked = true;
+      renderAdmin();
+      showAdminSection('results', document.querySelectorAll('.admin-tab')[1]);
+    } else {
+      if (errEl) errEl.textContent = 'Incorrect PIN';
+    }
+  }
+
   function setWinner(gameId, teamKey) {
+    if (!resultsUnlocked) return;
     State.setGameResult(gameId, teamKey, null, null, true);
     renderAdmin();
+    showAdminSection('results', document.querySelectorAll('.admin-tab')[1]);
+    if (activeTab === 'dashboard') Dashboard.render();
+    if (activeTab === 'bracket') BracketView.render();
+  }
+
+  function undoResult(gameId) {
+    if (!resultsUnlocked) return;
+    State.clearGameResult(gameId);
+    renderAdmin();
+    showAdminSection('results', document.querySelectorAll('.admin-tab')[1]);
     if (activeTab === 'dashboard') Dashboard.render();
     if (activeTab === 'bracket') BracketView.render();
   }
@@ -320,6 +365,8 @@ var App = (function() {
     toggleAdmin: toggleAdmin,
     showAdminSection: showAdminSection,
     setWinner: setWinner,
+    undoResult: undoResult,
+    unlockResults: unlockResults,
     confirmResetDraft: confirmResetDraft,
     confirmResetAll: confirmResetAll,
     publishState: publishState,
