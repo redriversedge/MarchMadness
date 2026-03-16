@@ -1,26 +1,28 @@
 # March Madness 2026 -- Bracket Contest Hub
 
 7-player NCAA tournament bracket contest. Deployed at marchmadnesstourney.netlify.app.
+Repo: github.com/redriversedge/MarchMadness
 
 ## Architecture
 
 Vanilla JS, no build step, no framework. Netlify Functions for API proxies. Netlify Blobs for shared state persistence.
 
 ```
-index.html              -- App shell, 3-tab bottom nav (Dashboard, Bracket, Rules)
-css/madness.css         -- Dark theme, mobile-first, CSS variables
+index.html              -- App shell, 3-tab bottom nav (Dashboard, Bracket, Scoring)
+css/madness.css         -- Dark theme, mobile-first, CSS variables, font size support
 js/config.js            -- Players, colors, 64-team bracket data, scoring rules, round dates
-js/state.js             -- localStorage load/save, game results, elimination tracking
+js/state.js             -- localStorage load/save, game results, elimination tracking, undo
 js/scoring.js           -- Standings calculation, round-by-round points, max possible
 js/draft.js             -- Snake draft with randomizer, team assignment, localStorage persistence
 js/dashboard.js         -- Leaderboard, expandable player cards, live ticker
-js/bracket.js           -- 64-team bracket (region view + full bracket), Final Four layout
-js/api.js               -- ESPN scoreboard polling, team name matching, score normalization
-js/app.js               -- Init, tab nav, admin panel, rules page, shared state publish/load
+js/bracket.js           -- 64-team bracket (region view + full bracket), Final Four bracket layout
+js/api.js               -- ESPN scoreboard polling, comprehensive team name matching, auto-scoring
+js/app.js               -- Init, tab nav, admin panel (PIN-protected results), shared state publish/load
 sw.js                   -- Service worker (bump CACHE_VERSION on every deploy)
+package.json            -- @netlify/blobs dependency
 netlify/functions/
   ncaa-proxy.js         -- ESPN scoreboard API CORS proxy (60s cache)
-  save-state.js         -- Admin: saves draft + game state to Netlify Blobs
+  save-state.js         -- Admin: saves draft + game state to Netlify Blobs (requires ADMIN_PIN)
   load-state.js         -- Public: loads shared state from Netlify Blobs
 ```
 
@@ -38,15 +40,35 @@ netlify/functions/
 
 ## Scoring
 
-Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 6 (Championship). Max per team: 21 points.
+Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 6 (Championship). Max per team: 21 points. Most total points wins.
 
 ## Key Concepts
 
 - **DRAFT_ASSIGNMENTS**: Team-to-player mapping. Loaded from localStorage (set during draft) or from server (Netlify Blobs). This is the source of truth for who owns which team.
 - **BRACKET**: 63-game tree built from TEAMS. Games 1-32 are R64, 33-48 R32, 49-56 S16, 57-60 E8, 61-62 F4, 63 Championship. Later rounds reference source games for winner advancement.
-- **ESPN API**: Public scoreboard endpoint (`groups=100` for tournament games). Team matching uses a comprehensive NAME_MAP in api.js. Unmatched teams log to console.
-- **Shared state**: Admin publishes draft + game results to Netlify Blobs via save-state function (requires ADMIN_PIN env var). All visitors load shared state on page load via load-state function.
-- **Font size**: User preference stored in localStorage (`mm_fontsize`). Applied via `data-fontsize` attribute on `<html>`.
+- **ESPN API**: Public scoreboard endpoint (`groups=100` for tournament games). Team matching uses a comprehensive NAME_MAP in api.js with abbreviations, display names, and partial matches. Unmatched teams log to console. Polls every 3 min during live games, 15 min otherwise.
+- **ESPN is the source of truth**: ESPN final results always override manual entries. Manual picks are placeholders until official scores arrive. If you accidentally pick the wrong winner, ESPN will auto-correct it.
+- **Shared state**: Admin publishes draft + game results to Netlify Blobs via save-state function. All visitors load shared state on page load. This is how everyone sees the same data.
+- **Results PIN**: Manual results entry requires PIN (1126) to unlock. Each completed game has an "Undo" button to clear the result.
+- **Font size**: User preference (Normal/Large/X-Large) stored in localStorage (`mm_fontsize`). Applied via `data-fontsize` attribute on `<html>`.
+
+## Round Dates
+
+- R64: Mar 20-21
+- R32: Mar 22-23
+- Sweet 16: Mar 27-28
+- Elite 8: Mar 29-30
+- Final Four: Apr 5
+- Championship: Apr 7
+
+## Admin Workflow
+
+1. Run snake draft in Admin > Draft (randomize order, pick teams)
+2. Publish to server in Admin > Settings > "Publish to Server" (requires ADMIN_PIN env var)
+3. Share the URL with everyone
+4. Scores auto-update from ESPN during the tournament
+5. Use Admin > Results (PIN: 1126) for manual corrections if needed
+6. Re-publish after any manual changes
 
 ## Commands
 
@@ -55,21 +77,21 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 6 (Champions
 
 ## Netlify Config
 
-- **Repo**: github.com/redriversedge/MarchMadness
 - **Build**: No build command, publish directory is `.`
-- **Environment variables**: `ADMIN_PIN` (required for publishing state)
-- **Blobs**: Used by save-state/load-state functions (auto-enabled)
+- **Environment variables**: `ADMIN_PIN` (required for publishing state to Netlify Blobs)
+- **Blobs**: Used by save-state/load-state functions (auto-enabled on Netlify)
 
 ## Code Conventions
 
 - All JS uses `var` (ES5 style). No `let`/`const`, no arrow functions, no template literals.
 - Global modules use IIFE pattern.
-- State changes go through State.setGameResult() or State.setGameStatus().
-- Manual overrides (from admin results entry) are flagged with `manualOverride: true` so ESPN API doesn't clobber them.
+- State changes go through State.setGameResult(), State.setGameStatus(), or State.clearGameResult().
+- ESPN results always take priority. No manualOverride blocking.
 
 ## Do NOT
 
 - Use `let`, `const`, arrow functions, or template literals
 - Hardcode ESPN team IDs (use the NAME_MAP in api.js for matching)
+- Block ESPN from overriding manual results
 - Commit node_modules/
 - Push directly without syntax checking first
