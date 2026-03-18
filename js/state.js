@@ -82,6 +82,14 @@ var State = (function() {
     save();
   }
 
+  function setGameExtra(gameId, startTime, statusDetail) {
+    var g = state.games[gameId];
+    if (!g) return;
+    if (startTime) g.startTime = startTime;
+    if (statusDetail) g.statusDetail = statusDetail;
+    save();
+  }
+
   function clearGameResult(gameId) {
     var g = state.games[gameId];
     if (!g) return;
@@ -151,6 +159,7 @@ var State = (function() {
     save: save,
     setGameResult: setGameResult,
     setGameStatus: setGameStatus,
+    setGameExtra: setGameExtra,
     reset: reset,
     resetDraft: resetDraft,
     resetAll: resetAll,

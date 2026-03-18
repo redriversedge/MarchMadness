@@ -44,14 +44,14 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 100 (Champio
 
 ## Key Concepts
 
-- **DRAFT_ASSIGNMENTS**: Team-to-player mapping. Loaded from localStorage (set during draft) or from server (Netlify Blobs). This is the source of truth for who owns which team.
+- **DRAFT_ASSIGNMENTS**: Team-to-player mapping. Loaded from localStorage (set during draft) or from shared-state.json (committed to repo). This is the source of truth for who owns which team.
 - **BRACKET**: 63-game tree built from TEAMS. Games 1-32 are R64, 33-48 R32, 49-56 S16, 57-60 E8, 61-62 F4, 63 Championship. Later rounds reference source games for winner advancement.
 - **ESPN API**: Public scoreboard endpoint (`groups=100` for tournament games). Team matching uses a comprehensive NAME_MAP in api.js with abbreviations, display names, and partial matches. Unmatched teams log to console. Polls every 3 min during live games, 15 min otherwise.
 - **ESPN is the source of truth**: ESPN final results always override manual entries. Manual picks are placeholders until official scores arrive. If you accidentally pick the wrong winner, ESPN will auto-correct it.
-- **Shared state**: Admin publishes draft + game results to Netlify Blobs via save-state function. All visitors load shared state on page load. This is how everyone sees the same data.
+- **Shared state**: Admin exports state as shared-state.json, commits to repo, and pushes. Netlify auto-deploys and all visitors load shared state on page load. No Netlify Blobs dependency.
 - **Results PIN**: Manual results entry requires PIN (1126) to unlock. Each completed game has an "Undo" button to clear the result.
 - **Team Reassignment**: Admin > Reassign tab (PIN: 1126) allows reassigning teams to different players after the draft. Saves to localStorage and updates DRAFT_ASSIGNMENTS live. Publish to server afterward to share.
-- **Scores page**: Fourth tab showing all games organized by round with current scores (live), final scores, or scheduled dates. Shows team owners with color-coded badges.
+- **Scores page**: Fourth tab showing all games organized by round with live scores (with period detail), final scores, or start date/time for scheduled games. Includes First Four play-in games. Shows team owners with color-coded badges. Has a Refresh button to manually trigger ESPN fetch. Auto-refreshes when ESPN polls complete.
 - **Font size**: User preference (Normal/Large/X-Large) stored in localStorage (`mm_fontsize`). Applied via `data-fontsize` attribute on `<html>`.
 
 ## Round Dates
@@ -67,7 +67,7 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 100 (Champio
 
 1. Run snake draft in Admin > Draft (randomize order, pick teams)
 2. Use Admin > Reassign (PIN: 1126) to fix any team assignments after the draft
-3. Publish to server in Admin > Settings > "Publish to Server" (requires ADMIN_PIN env var)
+3. Export state file in Admin > Settings > "Export State File", drop in repo root as shared-state.json, commit and push
 4. Share the URL with everyone
 5. Scores auto-update from ESPN during the tournament
 6. Use Admin > Results (PIN: 1126) for manual corrections if needed
@@ -81,8 +81,7 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 100 (Champio
 ## Netlify Config
 
 - **Build**: No build command, publish directory is `.`
-- **Environment variables**: `ADMIN_PIN` (required for publishing state to Netlify Blobs)
-- **Blobs**: Used by save-state/load-state functions (auto-enabled on Netlify)
+- **Shared state**: Stored in `shared-state.json` at repo root (no Netlify Blobs dependency)
 
 ## Code Conventions
 

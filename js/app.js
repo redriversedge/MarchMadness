@@ -30,7 +30,7 @@ var App = (function() {
   }
 
   function loadSharedState() {
-    fetch('/.netlify/functions/load-state')
+    fetch('/shared-state.json?t=' + Date.now())
       .then(function(res) { return res.json(); })
       .then(function(data) {
         if (!data) return;
@@ -40,6 +40,8 @@ var App = (function() {
           for (var i = 0; i < existing.length; i++) delete DRAFT_ASSIGNMENTS[existing[i]];
           var keys = Object.keys(data.draft);
           for (var i = 0; i < keys.length; i++) DRAFT_ASSIGNMENTS[keys[i]] = data.draft[keys[i]];
+          // Also save to localStorage so it persists locally
+          try { localStorage.setItem('mm_draft', JSON.stringify(DRAFT_ASSIGNMENTS)); } catch(e) {}
           Draft.init();
         }
 
@@ -67,34 +69,31 @@ var App = (function() {
   }
 
   function publishState() {
-    var pin = prompt('Enter admin PIN to publish:');
-    if (!pin) return;
-
     var state = State.get();
     var statusEl = document.getElementById('publish-status');
-    if (statusEl) statusEl.textContent = 'Publishing...';
 
-    fetch('/.netlify/functions/save-state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        pin: pin,
-        draft: DRAFT_ASSIGNMENTS,
-        games: state.games
-      })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (data.success) {
-        if (statusEl) statusEl.textContent = 'Published! Everyone will see the latest data.';
-        setTimeout(function() { if (statusEl) statusEl.textContent = ''; }, 5000);
-      } else {
-        if (statusEl) statusEl.textContent = 'Error: ' + (data.error || 'Unknown error');
-      }
-    })
-    .catch(function(err) {
-      if (statusEl) statusEl.textContent = 'Error: ' + err.message;
-    });
+    var exportData = {
+      draft: DRAFT_ASSIGNMENTS,
+      games: state.games,
+      meta: { lastPublished: new Date().toISOString(), publishedBy: 'admin' }
+    };
+
+    var json = JSON.stringify(exportData, null, 2);
+
+    // Download as shared-state.json
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'shared-state.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (statusEl) {
+      statusEl.innerHTML = 'Downloaded! Drop this file in the MarchMadness repo root (replace the existing shared-state.json), then commit and push to make it live for everyone.';
+    }
   }
 
   function renderNav() {
@@ -190,9 +189,9 @@ var App = (function() {
     // Settings
     html += '<div id="admin-settings" class="admin-section" style="display:none;">';
     html += '<h3 style="margin-bottom:8px;">Share with Everyone</h3>';
-    html += '<p style="font-size:12px;color:#888;margin-bottom:8px;">Publish your draft and results so everyone sees the same data.</p>';
-    html += '<button class="btn btn-primary" onclick="App.publishState()">Publish to Server</button>';
-    html += '<button class="btn btn-secondary" onclick="App.loadSharedState()">Pull Latest from Server</button>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:8px;">Export your draft and results as a file. Drop it in the repo and push to make it live.</p>';
+    html += '<button class="btn btn-primary" onclick="App.publishState()">Export State File</button>';
+    html += '<button class="btn btn-secondary" onclick="App.loadSharedState()">Reload Shared State</button>';
     html += '<div id="publish-status" style="font-size:12px;color:#22c55e;margin-top:6px;"></div>';
 
     html += '<div style="margin-top:20px;padding-top:16px;border-top:1px solid #333;">';
@@ -440,6 +439,85 @@ var App = (function() {
   }
 
   // === SCORES/SCHEDULE PAGE ===
+  function formatGameTime(isoString) {
+    if (!isoString) return '';
+    try {
+      var d = new Date(isoString);
+      if (isNaN(d.getTime())) return '';
+      var options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' };
+      return d.toLocaleString('en-US', options);
+    } catch(e) { return ''; }
+  }
+
+  function renderScoreGame(gId, g, teams, roundLabel, showRegion) {
+    var t1 = teams.team1 ? TEAMS[teams.team1] : null;
+    var t2 = teams.team2 ? TEAMS[teams.team2] : null;
+    if (!t1 && !t2) return '';
+
+    var region = BRACKET[gId] ? BRACKET[gId].region : '';
+    var statusClass = '';
+
+    if (g.status === 'final') {
+      statusClass = 'score-game-final';
+    } else if (g.status === 'in_progress') {
+      statusClass = 'score-game-live';
+    } else {
+      statusClass = 'score-game-scheduled';
+    }
+
+    var owner1 = teams.team1 ? getTeamOwner(teams.team1) : null;
+    var owner2 = teams.team2 ? getTeamOwner(teams.team2) : null;
+    var color1 = owner1 ? getPlayerColor(owner1) : '#666';
+    var color2 = owner2 ? getPlayerColor(owner2) : '#666';
+
+    var html = '<div class="score-game ' + statusClass + '">';
+
+    // Status badge with time
+    if (g.status === 'in_progress') {
+      var detail = g.statusDetail || 'LIVE';
+      html += '<div class="score-status"><span class="ticker-live">' + detail + '</span></div>';
+    } else if (g.status === 'final') {
+      html += '<div class="score-status"><span class="score-final-badge">FINAL</span></div>';
+    } else {
+      var timeStr = formatGameTime(g.startTime);
+      if (timeStr) {
+        html += '<div class="score-status"><span class="score-scheduled-badge">' + timeStr + '</span></div>';
+      } else {
+        html += '<div class="score-status"><span class="score-scheduled-badge">' + (roundLabel || 'TBD') + '</span></div>';
+      }
+    }
+
+    // Region
+    if (showRegion && region) {
+      html += '<div class="score-region">' + region + '</div>';
+    }
+
+    // Team 1
+    var t1Loser = g.winner && g.winner !== teams.team1;
+    html += '<div class="score-team-row' + (t1Loser ? ' score-loser' : '') + '">';
+    html += '<span class="score-team-seed">' + (t1 ? t1.seed : '?') + '</span>';
+    html += '<span class="score-team-name" style="border-left:3px solid ' + color1 + ';padding-left:8px;">' + (t1 ? t1.name : 'TBD') + '</span>';
+    if (owner1) {
+      html += '<span class="team-owner-badge" style="background:' + color1 + '">' + owner1 + '</span>';
+    }
+    html += '<span class="score-team-score">' + (g.score1 !== null ? g.score1 : '') + '</span>';
+    html += '</div>';
+
+    // Team 2
+    var t2Loser = g.winner && g.winner !== teams.team2;
+    html += '<div class="score-team-row' + (t2Loser ? ' score-loser' : '') + '">';
+    html += '<span class="score-team-seed">' + (t2 ? t2.seed : '?') + '</span>';
+    html += '<span class="score-team-name" style="border-left:3px solid ' + color2 + ';padding-left:8px;">' + (t2 ? t2.name : 'TBD') + '</span>';
+    if (owner2) {
+      html += '<span class="team-owner-badge" style="background:' + color2 + '">' + owner2 + '</span>';
+    }
+    html += '<span class="score-team-score">' + (g.score2 !== null ? g.score2 : '') + '</span>';
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+  }
+
   function renderScores() {
     var container = document.getElementById('tab-scores');
     if (!container) return;
@@ -451,6 +529,46 @@ var App = (function() {
     html += '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="App.refreshFromESPN()">Refresh</button>';
     html += '</div>';
 
+    // Play-in games (First Four) section
+    var playInGames = state.playInGames || [];
+    if (playInGames.length > 0) {
+      html += '<div class="scores-round">';
+      html += '<div class="scores-round-header">';
+      html += '<span>First Four</span>';
+      html += '<span class="scores-round-date">Mar 17-18</span>';
+      html += '</div>';
+      for (var p = 0; p < playInGames.length; p++) {
+        var pg = playInGames[p];
+        var statusClass = '';
+        if (pg.status === 'final') statusClass = 'score-game-final';
+        else if (pg.status === 'in_progress') statusClass = 'score-game-live';
+        else statusClass = 'score-game-scheduled';
+
+        html += '<div class="score-game ' + statusClass + '">';
+        if (pg.status === 'in_progress') {
+          html += '<div class="score-status"><span class="ticker-live">' + (pg.statusDetail || 'LIVE') + '</span></div>';
+        } else if (pg.status === 'final') {
+          html += '<div class="score-status"><span class="score-final-badge">FINAL</span></div>';
+        } else {
+          var piTime = formatGameTime(pg.startTime);
+          html += '<div class="score-status"><span class="score-scheduled-badge">' + (piTime || 'TBD') + '</span></div>';
+        }
+        html += '<div class="score-team-row' + (pg.winner && pg.winner !== 1 ? ' score-loser' : '') + '">';
+        html += '<span class="score-team-seed">' + (pg.seed1 || '?') + '</span>';
+        html += '<span class="score-team-name" style="border-left:3px solid #666;padding-left:8px;">' + pg.team1Name + '</span>';
+        html += '<span class="score-team-score">' + (pg.score1 !== null && pg.score1 !== undefined ? pg.score1 : '') + '</span>';
+        html += '</div>';
+        html += '<div class="score-team-row' + (pg.winner && pg.winner !== 2 ? ' score-loser' : '') + '">';
+        html += '<span class="score-team-seed">' + (pg.seed2 || '?') + '</span>';
+        html += '<span class="score-team-name" style="border-left:3px solid #666;padding-left:8px;">' + pg.team2Name + '</span>';
+        html += '<span class="score-team-score">' + (pg.score2 !== null && pg.score2 !== undefined ? pg.score2 : '') + '</span>';
+        html += '</div>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+
+    // Regular rounds
     for (var r = 0; r < CONFIG.roundNames.length; r++) {
       var roundNum = r + 1;
       html += '<div class="scores-round">';
@@ -469,73 +587,9 @@ var App = (function() {
 
         var g = state.games[gId];
         var teams = State.getGameTeams(gId);
-        var t1 = teams.team1 ? TEAMS[teams.team1] : null;
-        var t2 = teams.team2 ? TEAMS[teams.team2] : null;
-
-        if (!t1 && !t2) continue;
-        hasGames = true;
-
-        var region = BRACKET[gId].region;
-        var statusClass = '';
-        var statusLabel = '';
-
-        if (g.status === 'final') {
-          statusClass = 'score-game-final';
-          statusLabel = 'FINAL';
-        } else if (g.status === 'in_progress') {
-          statusClass = 'score-game-live';
-          statusLabel = 'LIVE';
-        } else {
-          statusClass = 'score-game-scheduled';
-          statusLabel = CONFIG.roundDates[r];
-        }
-
-        var owner1 = teams.team1 ? getTeamOwner(teams.team1) : null;
-        var owner2 = teams.team2 ? getTeamOwner(teams.team2) : null;
-        var color1 = owner1 ? getPlayerColor(owner1) : '#666';
-        var color2 = owner2 ? getPlayerColor(owner2) : '#666';
-
-        html += '<div class="score-game ' + statusClass + '">';
-
-        // Status badge
-        if (g.status === 'in_progress') {
-          html += '<div class="score-status"><span class="ticker-live">LIVE</span></div>';
-        } else if (g.status === 'final') {
-          html += '<div class="score-status"><span class="score-final-badge">FINAL</span></div>';
-        } else {
-          html += '<div class="score-status"><span class="score-scheduled-badge">' + CONFIG.roundDates[r] + '</span></div>';
-        }
-
-        // Region
-        if (roundNum <= 4) {
-          html += '<div class="score-region">' + region + '</div>';
-        }
-
-        // Team 1
-        var t1Winner = g.winner && g.winner === teams.team1;
-        var t1Loser = g.winner && g.winner !== teams.team1;
-        html += '<div class="score-team-row' + (t1Loser ? ' score-loser' : '') + '">';
-        html += '<span class="score-team-seed">' + (t1 ? t1.seed : '?') + '</span>';
-        html += '<span class="score-team-name" style="border-left:3px solid ' + color1 + ';padding-left:8px;">' + (t1 ? t1.name : 'TBD') + '</span>';
-        if (owner1) {
-          html += '<span class="team-owner-badge" style="background:' + color1 + '">' + owner1 + '</span>';
-        }
-        html += '<span class="score-team-score">' + (g.score1 !== null ? g.score1 : '') + '</span>';
-        html += '</div>';
-
-        // Team 2
-        var t2Winner = g.winner && g.winner === teams.team2;
-        var t2Loser = g.winner && g.winner !== teams.team2;
-        html += '<div class="score-team-row' + (t2Loser ? ' score-loser' : '') + '">';
-        html += '<span class="score-team-seed">' + (t2 ? t2.seed : '?') + '</span>';
-        html += '<span class="score-team-name" style="border-left:3px solid ' + color2 + ';padding-left:8px;">' + (t2 ? t2.name : 'TBD') + '</span>';
-        if (owner2) {
-          html += '<span class="team-owner-badge" style="background:' + color2 + '">' + owner2 + '</span>';
-        }
-        html += '<span class="score-team-score">' + (g.score2 !== null ? g.score2 : '') + '</span>';
-        html += '</div>';
-
-        html += '</div>';
+        var rendered = renderScoreGame(gId, g, teams, CONFIG.roundDates[r], roundNum <= 4);
+        if (rendered) hasGames = true;
+        html += rendered;
       }
 
       if (!hasGames) {

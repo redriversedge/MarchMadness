@@ -1,7 +1,4 @@
 {
   "name": "march-madness-2026",
-  "private": true,
-  "dependencies": {
-    "@netlify/blobs": "^8.0.0"
-  }
+  "private": true
 }

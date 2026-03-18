@@ -153,17 +153,67 @@ var API = (function() {
       var team2Key = matchESPNTeam(competitors[1]);
 
       if (!team1Key && !team2Key) {
-        // Log unmatched for debugging
+        // Could be a play-in (First Four) game with teams not in our bracket
         var n1 = competitors[0].team ? (competitors[0].team.displayName || competitors[0].team.name || '') : '?';
         var n2 = competitors[1].team ? (competitors[1].team.displayName || competitors[1].team.name || '') : '?';
-        console.log('Unmatched ESPN game:', n1, 'vs', n2);
+        var piStatus = event.status && event.status.type ? event.status.type.name : '';
+        var piDetail = event.status && event.status.type ? (event.status.type.shortDetail || '') : '';
+        var piStartTime = event.date || '';
+        var piScore1 = parseInt(competitors[0].score) || 0;
+        var piScore2 = parseInt(competitors[1].score) || 0;
+
+        // Check if this looks like a tournament game (First Four)
+        if (n1 !== '?' && n2 !== '?') {
+          var piGame = {
+            team1Name: n1, team2Name: n2,
+            score1: piScore1, score2: piScore2,
+            startTime: piStartTime, statusDetail: piDetail,
+            status: piStatus === 'STATUS_FINAL' ? 'final' : (piStatus === 'STATUS_IN_PROGRESS' ? 'in_progress' : 'scheduled'),
+            winner: null, seed1: '', seed2: ''
+          };
+          if (competitors[0].curatedRank) piGame.seed1 = competitors[0].curatedRank.current || '';
+          if (competitors[1].curatedRank) piGame.seed2 = competitors[1].curatedRank.current || '';
+          if (piStatus === 'STATUS_FINAL') {
+            piGame.winner = piScore1 > piScore2 ? 1 : 2;
+          }
+          if (piStatus === 'STATUS_IN_PROGRESS') hasLive = true;
+          addPlayInGame(piGame);
+        }
         continue;
       }
 
       var gameId = findGame(team1Key, team2Key);
-      if (!gameId) continue;
+      if (!gameId) {
+        // This matched one or both teams but didn't find a bracket game
+        // Could be a First Four game for a play-in slot team
+        var ffn1 = competitors[0].team ? (competitors[0].team.displayName || competitors[0].team.name || '') : '?';
+        var ffn2 = competitors[1].team ? (competitors[1].team.displayName || competitors[1].team.name || '') : '?';
+        var ffStatus = event.status && event.status.type ? event.status.type.name : '';
+        var ffDetail = event.status && event.status.type ? (event.status.type.shortDetail || '') : '';
+        var ffStartTime = event.date || '';
+        var ffScore1 = parseInt(competitors[0].score) || 0;
+        var ffScore2 = parseInt(competitors[1].score) || 0;
+
+        var ffGame = {
+          team1Name: ffn1, team2Name: ffn2,
+          score1: ffScore1, score2: ffScore2,
+          startTime: ffStartTime, statusDetail: ffDetail,
+          status: ffStatus === 'STATUS_FINAL' ? 'final' : (ffStatus === 'STATUS_IN_PROGRESS' ? 'in_progress' : 'scheduled'),
+          winner: null, seed1: '', seed2: ''
+        };
+        if (competitors[0].curatedRank) ffGame.seed1 = competitors[0].curatedRank.current || '';
+        if (competitors[1].curatedRank) ffGame.seed2 = competitors[1].curatedRank.current || '';
+        if (ffStatus === 'STATUS_FINAL') {
+          ffGame.winner = ffScore1 > ffScore2 ? 1 : 2;
+        }
+        if (ffStatus === 'STATUS_IN_PROGRESS') hasLive = true;
+        addPlayInGame(ffGame);
+        continue;
+      }
 
       var statusType = event.status && event.status.type ? event.status.type.name : '';
+      var statusDetail = event.status && event.status.type ? (event.status.type.shortDetail || '') : '';
+      var startTime = event.date || '';
       var score1 = parseInt(competitors[0].score) || 0;
       var score2 = parseInt(competitors[1].score) || 0;
 
@@ -179,15 +229,37 @@ var API = (function() {
       if (statusType === 'STATUS_FINAL') {
         var winner = s1 > s2 ? bracketTeams.team1 : bracketTeams.team2;
         State.setGameResult(gameId, winner, s1, s2, false);
+        State.setGameExtra(gameId, startTime, statusDetail);
       } else if (statusType === 'STATUS_IN_PROGRESS') {
         hasLive = true;
         State.setGameStatus(gameId, 'in_progress', s1, s2);
+        State.setGameExtra(gameId, startTime, statusDetail);
       } else if (statusType === 'STATUS_SCHEDULED') {
-        // Don't overwrite existing data for scheduled games
+        // Store the start time even for scheduled games
+        State.setGameExtra(gameId, startTime, statusDetail);
       }
     }
 
     return hasLive;
+  }
+
+  function addPlayInGame(game) {
+    var state = State.get();
+    if (!state.playInGames) state.playInGames = [];
+    // Deduplicate by team names
+    var key = game.team1Name + ' vs ' + game.team2Name;
+    var found = false;
+    for (var i = 0; i < state.playInGames.length; i++) {
+      var existing = state.playInGames[i].team1Name + ' vs ' + state.playInGames[i].team2Name;
+      var existingReverse = state.playInGames[i].team2Name + ' vs ' + state.playInGames[i].team1Name;
+      if (existing === key || existingReverse === key) {
+        state.playInGames[i] = game;
+        found = true;
+        break;
+      }
+    }
+    if (!found) state.playInGames.push(game);
+    State.save();
   }
 
   function matchESPNTeam(competitor) {
