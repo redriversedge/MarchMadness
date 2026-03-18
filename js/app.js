@@ -4,6 +4,7 @@ var App = (function() {
   var activeTab = 'dashboard';
   var adminOpen = false;
   var fontSize = 'normal';
+  var reassignUnlocked = false;
 
   function init() {
     State.init();
@@ -105,6 +106,8 @@ var App = (function() {
         '<span class="nav-icon">&#127942;</span><span class="nav-label">Dashboard</span></button>' +
       '<button class="nav-btn" data-tab="bracket" onclick="App.switchTab(\'bracket\')">' +
         '<span class="nav-icon">&#127936;</span><span class="nav-label">Bracket</span></button>' +
+      '<button class="nav-btn" data-tab="scores" onclick="App.switchTab(\'scores\')">' +
+        '<span class="nav-icon">&#9917;</span><span class="nav-label">Scores</span></button>' +
       '<button class="nav-btn" data-tab="rules" onclick="App.switchTab(\'rules\')">' +
         '<span class="nav-icon">&#128220;</span><span class="nav-label">Rules</span></button>';
   }
@@ -117,7 +120,7 @@ var App = (function() {
       buttons[i].className = buttons[i].getAttribute('data-tab') === tab ? 'nav-btn active' : 'nav-btn';
     }
 
-    var tabs = ['dashboard', 'bracket', 'rules'];
+    var tabs = ['dashboard', 'bracket', 'scores', 'rules'];
     for (var i = 0; i < tabs.length; i++) {
       var el = document.getElementById('tab-' + tabs[i]);
       if (el) el.style.display = tabs[i] === tab ? 'block' : 'none';
@@ -125,6 +128,7 @@ var App = (function() {
 
     if (tab === 'dashboard') Dashboard.render();
     else if (tab === 'bracket') BracketView.render();
+    else if (tab === 'scores') renderScores();
     else if (tab === 'rules') renderRules();
   }
 
@@ -168,11 +172,16 @@ var App = (function() {
     var html = '';
     html += '<div class="admin-tabs">';
     html += '<button class="admin-tab active" onclick="App.showAdminSection(\'draft\', this)">Draft</button>';
+    html += '<button class="admin-tab" onclick="App.showAdminSection(\'reassign\', this)">Reassign</button>';
     html += '<button class="admin-tab" onclick="App.showAdminSection(\'results\', this)">Results</button>';
     html += '<button class="admin-tab" onclick="App.showAdminSection(\'settings\', this)">Settings</button>';
     html += '</div>';
 
     html += '<div id="admin-draft" class="admin-section"><div id="draft-content"></div></div>';
+
+    html += '<div id="admin-reassign" class="admin-section" style="display:none;">';
+    html += renderReassign();
+    html += '</div>';
 
     html += '<div id="admin-results" class="admin-section" style="display:none;">';
     html += renderResultsEntry();
@@ -325,6 +334,218 @@ var App = (function() {
     if (activeTab === 'bracket') BracketView.render();
   }
 
+  // === TEAM REASSIGNMENT (PIN-protected) ===
+  function renderReassign() {
+    var html = '';
+
+    if (!reassignUnlocked) {
+      html += '<div class="results-lock">';
+      html += '<h3>Team Reassignment</h3>';
+      html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Reassign teams to different players after the draft. Enter PIN to unlock.</p>';
+      html += '<div style="display:flex;gap:8px;align-items:center;">';
+      html += '<input type="password" id="reassign-pin" placeholder="Enter PIN" class="pin-input" onkeydown="if(event.key===\'Enter\')App.unlockReassign()">';
+      html += '<button class="btn btn-primary" onclick="App.unlockReassign()">Unlock</button>';
+      html += '</div>';
+      html += '<div id="reassign-pin-error" style="font-size:12px;color:#ef4444;margin-top:6px;"></div>';
+      html += '</div>';
+      return html;
+    }
+
+    html += '<h3>Team Reassignment</h3>';
+    html += '<p style="font-size:12px;color:#888;margin-bottom:12px;">Change team owners below, then click Save to apply.</p>';
+
+    // Build a temp copy of assignments for editing
+    REGIONS.forEach(function(region) {
+      html += '<h4 style="font-size:13px;color:var(--text-dim);text-transform:uppercase;margin:16px 0 8px;">' + region + '</h4>';
+      var teamKeys = Object.keys(TEAMS);
+      teamKeys.sort(function(a, b) {
+        if (TEAMS[a].region !== TEAMS[b].region) return TEAMS[a].region.localeCompare(TEAMS[b].region);
+        return TEAMS[a].seed - TEAMS[b].seed;
+      });
+      for (var i = 0; i < teamKeys.length; i++) {
+        var tk = teamKeys[i];
+        var t = TEAMS[tk];
+        if (t.region !== region) continue;
+        var currentOwner = DRAFT_ASSIGNMENTS[tk] || '';
+
+        html += '<div class="reassign-row">';
+        html += '<span class="reassign-team">(' + t.seed + ') ' + t.name + '</span>';
+        html += '<select class="reassign-select" id="reassign-' + tk + '" data-team="' + tk + '">';
+        html += '<option value="">Unassigned</option>';
+        for (var j = 0; j < CONFIG.players.length; j++) {
+          var p = CONFIG.players[j];
+          var sel = (currentOwner === p.id) ? ' selected' : '';
+          html += '<option value="' + p.id + '"' + sel + '>' + p.name + ' (' + p.id + ')</option>';
+        }
+        html += '</select>';
+        html += '</div>';
+      }
+    });
+
+    html += '<div style="margin-top:16px;display:flex;gap:8px;">';
+    html += '<button class="btn btn-primary" onclick="App.saveReassignments()">Save Assignments</button>';
+    html += '</div>';
+    html += '<div id="reassign-status" style="font-size:12px;color:#22c55e;margin-top:6px;"></div>';
+
+    return html;
+  }
+
+  function unlockReassign() {
+    var pinEl = document.getElementById('reassign-pin');
+    var errEl = document.getElementById('reassign-pin-error');
+    if (!pinEl) return;
+    if (pinEl.value === '1126') {
+      reassignUnlocked = true;
+      renderAdmin();
+      showAdminSection('reassign', document.querySelectorAll('.admin-tab')[1]);
+    } else {
+      if (errEl) errEl.textContent = 'Incorrect PIN';
+    }
+  }
+
+  function saveReassignments() {
+    var selects = document.querySelectorAll('.reassign-select');
+    var newAssignments = {};
+    for (var i = 0; i < selects.length; i++) {
+      var tk = selects[i].getAttribute('data-team');
+      var val = selects[i].value;
+      if (val) {
+        newAssignments[tk] = val;
+      }
+    }
+
+    // Clear and repopulate DRAFT_ASSIGNMENTS
+    var existing = Object.keys(DRAFT_ASSIGNMENTS);
+    for (var i = 0; i < existing.length; i++) {
+      delete DRAFT_ASSIGNMENTS[existing[i]];
+    }
+    var keys = Object.keys(newAssignments);
+    for (var i = 0; i < keys.length; i++) {
+      DRAFT_ASSIGNMENTS[keys[i]] = newAssignments[keys[i]];
+    }
+
+    // Save to localStorage
+    try {
+      localStorage.setItem('mm_draft', JSON.stringify(DRAFT_ASSIGNMENTS));
+    } catch(e) {}
+
+    // Re-init draft so it sees the new assignments
+    Draft.init();
+
+    var statusEl = document.getElementById('reassign-status');
+    if (statusEl) statusEl.textContent = 'Assignments saved! Publish to server to share with everyone.';
+
+    // Refresh views
+    switchTab(activeTab);
+  }
+
+  // === SCORES/SCHEDULE PAGE ===
+  function renderScores() {
+    var container = document.getElementById('tab-scores');
+    if (!container) return;
+
+    var state = State.get();
+    var html = '<div class="scores-page">';
+    html += '<h2 class="rules-title">Scores & Schedule</h2>';
+
+    for (var r = 0; r < CONFIG.roundNames.length; r++) {
+      var roundNum = r + 1;
+      html += '<div class="scores-round">';
+      html += '<div class="scores-round-header">';
+      html += '<span>' + CONFIG.roundFullNames[r] + '</span>';
+      html += '<span class="scores-round-date">' + CONFIG.roundDates[r] + '</span>';
+      html += '</div>';
+
+      var gameKeys = Object.keys(BRACKET);
+      gameKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
+      var hasGames = false;
+
+      for (var i = 0; i < gameKeys.length; i++) {
+        var gId = gameKeys[i];
+        if (BRACKET[gId].round !== roundNum) continue;
+
+        var g = state.games[gId];
+        var teams = State.getGameTeams(gId);
+        var t1 = teams.team1 ? TEAMS[teams.team1] : null;
+        var t2 = teams.team2 ? TEAMS[teams.team2] : null;
+
+        if (!t1 && !t2) continue;
+        hasGames = true;
+
+        var region = BRACKET[gId].region;
+        var statusClass = '';
+        var statusLabel = '';
+
+        if (g.status === 'final') {
+          statusClass = 'score-game-final';
+          statusLabel = 'FINAL';
+        } else if (g.status === 'in_progress') {
+          statusClass = 'score-game-live';
+          statusLabel = 'LIVE';
+        } else {
+          statusClass = 'score-game-scheduled';
+          statusLabel = CONFIG.roundDates[r];
+        }
+
+        var owner1 = teams.team1 ? getTeamOwner(teams.team1) : null;
+        var owner2 = teams.team2 ? getTeamOwner(teams.team2) : null;
+        var color1 = owner1 ? getPlayerColor(owner1) : '#666';
+        var color2 = owner2 ? getPlayerColor(owner2) : '#666';
+
+        html += '<div class="score-game ' + statusClass + '">';
+
+        // Status badge
+        if (g.status === 'in_progress') {
+          html += '<div class="score-status"><span class="ticker-live">LIVE</span></div>';
+        } else if (g.status === 'final') {
+          html += '<div class="score-status"><span class="score-final-badge">FINAL</span></div>';
+        } else {
+          html += '<div class="score-status"><span class="score-scheduled-badge">' + CONFIG.roundDates[r] + '</span></div>';
+        }
+
+        // Region
+        if (roundNum <= 4) {
+          html += '<div class="score-region">' + region + '</div>';
+        }
+
+        // Team 1
+        var t1Winner = g.winner && g.winner === teams.team1;
+        var t1Loser = g.winner && g.winner !== teams.team1;
+        html += '<div class="score-team-row' + (t1Loser ? ' score-loser' : '') + '">';
+        html += '<span class="score-team-seed">' + (t1 ? t1.seed : '?') + '</span>';
+        html += '<span class="score-team-name" style="border-left:3px solid ' + color1 + ';padding-left:8px;">' + (t1 ? t1.name : 'TBD') + '</span>';
+        if (owner1) {
+          html += '<span class="team-owner-badge" style="background:' + color1 + '">' + owner1 + '</span>';
+        }
+        html += '<span class="score-team-score">' + (g.score1 !== null ? g.score1 : '') + '</span>';
+        html += '</div>';
+
+        // Team 2
+        var t2Winner = g.winner && g.winner === teams.team2;
+        var t2Loser = g.winner && g.winner !== teams.team2;
+        html += '<div class="score-team-row' + (t2Loser ? ' score-loser' : '') + '">';
+        html += '<span class="score-team-seed">' + (t2 ? t2.seed : '?') + '</span>';
+        html += '<span class="score-team-name" style="border-left:3px solid ' + color2 + ';padding-left:8px;">' + (t2 ? t2.name : 'TBD') + '</span>';
+        if (owner2) {
+          html += '<span class="team-owner-badge" style="background:' + color2 + '">' + owner2 + '</span>';
+        }
+        html += '<span class="score-team-score">' + (g.score2 !== null ? g.score2 : '') + '</span>';
+        html += '</div>';
+
+        html += '</div>';
+      }
+
+      if (!hasGames) {
+        html += '<p style="color:var(--text-muted);font-size:12px;padding:8px 0;">Games TBD</p>';
+      }
+
+      html += '</div>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
   function confirmResetDraft() {
     if (confirm('Reset the draft? All team assignments will be cleared.')) {
       Draft.resetDraft();
@@ -367,6 +588,8 @@ var App = (function() {
     setWinner: setWinner,
     undoResult: undoResult,
     unlockResults: unlockResults,
+    unlockReassign: unlockReassign,
+    saveReassignments: saveReassignments,
     confirmResetDraft: confirmResetDraft,
     confirmResetAll: confirmResetAll,
     publishState: publishState,

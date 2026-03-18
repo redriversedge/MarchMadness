@@ -1182,6 +1182,135 @@ body {
   font-size: 14px;
 }
 
+/* === REASSIGN UI === */
+.reassign-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #1a1a2a;
+}
+
+.reassign-team {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.reassign-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  min-width: 140px;
+}
+.reassign-select:focus { outline: none; border-color: #3b82f6; }
+
+/* === SCORES PAGE === */
+.scores-page {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.scores-round {
+  margin-bottom: 24px;
+}
+
+.scores-round-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--color-cb);
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.scores-round-date {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.score-game {
+  background: var(--bg-card);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border: 1px solid var(--border);
+}
+
+.score-game-live {
+  border-color: #ef4444;
+}
+
+.score-status {
+  margin-bottom: 4px;
+}
+
+.score-final-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.score-scheduled-badge {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.score-region {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.score-team-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.score-team-seed {
+  font-size: 11px;
+  color: var(--text-dim);
+  min-width: 18px;
+  text-align: right;
+}
+
+.score-team-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.score-team-score {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  min-width: 30px;
+  text-align: right;
+}
+
+.score-loser {
+  opacity: 0.45;
+}
+
+.score-loser .score-team-name {
+  text-decoration: line-through;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 767px) {
   /* Bracket stays horizontal on mobile - swipe left/right */

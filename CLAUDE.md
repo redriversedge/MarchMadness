@@ -8,7 +8,7 @@ Repo: github.com/redriversedge/MarchMadness
 Vanilla JS, no build step, no framework. Netlify Functions for API proxies. Netlify Blobs for shared state persistence.
 
 ```
-index.html              -- App shell, 3-tab bottom nav (Dashboard, Bracket, Scoring)
+index.html              -- App shell, 4-tab bottom nav (Dashboard, Bracket, Scores, Rules)
 css/madness.css         -- Dark theme, mobile-first, CSS variables, font size support
 js/config.js            -- Players, colors, 64-team bracket data, scoring rules, round dates
 js/state.js             -- localStorage load/save, game results, elimination tracking, undo
@@ -17,7 +17,7 @@ js/draft.js             -- Snake draft with randomizer, team assignment, localSt
 js/dashboard.js         -- Leaderboard, expandable player cards, live ticker
 js/bracket.js           -- 64-team bracket (region view + full bracket), Final Four bracket layout
 js/api.js               -- ESPN scoreboard polling, comprehensive team name matching, auto-scoring
-js/app.js               -- Init, tab nav, admin panel (PIN-protected results), shared state publish/load
+js/app.js               -- Init, tab nav, admin panel (PIN-protected results + reassignment), scores page, shared state publish/load
 sw.js                   -- Service worker (bump CACHE_VERSION on every deploy)
 package.json            -- @netlify/blobs dependency
 netlify/functions/
@@ -40,7 +40,7 @@ netlify/functions/
 
 ## Scoring
 
-Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 6 (Championship). Max per team: 21 points. Most total points wins.
+Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 100 (Championship). Max per team: 115 points. The championship winner's owner automatically wins the contest. Most total points wins.
 
 ## Key Concepts
 
@@ -50,6 +50,8 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 6 (Champions
 - **ESPN is the source of truth**: ESPN final results always override manual entries. Manual picks are placeholders until official scores arrive. If you accidentally pick the wrong winner, ESPN will auto-correct it.
 - **Shared state**: Admin publishes draft + game results to Netlify Blobs via save-state function. All visitors load shared state on page load. This is how everyone sees the same data.
 - **Results PIN**: Manual results entry requires PIN (1126) to unlock. Each completed game has an "Undo" button to clear the result.
+- **Team Reassignment**: Admin > Reassign tab (PIN: 1126) allows reassigning teams to different players after the draft. Saves to localStorage and updates DRAFT_ASSIGNMENTS live. Publish to server afterward to share.
+- **Scores page**: Fourth tab showing all games organized by round with current scores (live), final scores, or scheduled dates. Shows team owners with color-coded badges.
 - **Font size**: User preference (Normal/Large/X-Large) stored in localStorage (`mm_fontsize`). Applied via `data-fontsize` attribute on `<html>`.
 
 ## Round Dates
@@ -64,11 +66,12 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 6 (Champions
 ## Admin Workflow
 
 1. Run snake draft in Admin > Draft (randomize order, pick teams)
-2. Publish to server in Admin > Settings > "Publish to Server" (requires ADMIN_PIN env var)
-3. Share the URL with everyone
-4. Scores auto-update from ESPN during the tournament
-5. Use Admin > Results (PIN: 1126) for manual corrections if needed
-6. Re-publish after any manual changes
+2. Use Admin > Reassign (PIN: 1126) to fix any team assignments after the draft
+3. Publish to server in Admin > Settings > "Publish to Server" (requires ADMIN_PIN env var)
+4. Share the URL with everyone
+5. Scores auto-update from ESPN during the tournament
+6. Use Admin > Results (PIN: 1126) for manual corrections if needed
+7. Re-publish after any manual changes
 
 ## Commands
 
