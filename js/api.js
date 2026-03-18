@@ -349,17 +349,13 @@ var API = (function() {
     var today = new Date();
     var dates = [];
 
-    // Always include today and yesterday
-    dates.push(formatDate(today));
-    var yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    dates.push(formatDate(yesterday));
-
-    // During tournament windows, also include the day before yesterday
-    // to catch any games we might have missed
-    var twoDaysAgo = new Date(today);
-    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
-    dates.push(formatDate(twoDaysAgo));
+    // Fetch a window of dates to catch scheduled, live, and recent games
+    // This covers upcoming games (with start times) and recently completed games
+    for (var offset = -2; offset <= 5; offset++) {
+      var d = new Date(today);
+      d.setDate(d.getDate() + offset);
+      dates.push(formatDate(d));
+    }
 
     // Remove duplicates
     var unique = {};
