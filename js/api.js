@@ -130,6 +130,7 @@ var API = (function() {
     adjustPollRate(hasLive);
     Dashboard.render();
     BracketView.render();
+    App.refreshScores();
     if (callback) callback();
   }
 

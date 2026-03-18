@@ -446,7 +446,10 @@ var App = (function() {
 
     var state = State.get();
     var html = '<div class="scores-page">';
-    html += '<h2 class="rules-title">Scores & Schedule</h2>';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
+    html += '<h2 class="rules-title" style="margin-bottom:0;">Scores & Schedule</h2>';
+    html += '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="App.refreshFromESPN()">Refresh</button>';
+    html += '</div>';
 
     for (var r = 0; r < CONFIG.roundNames.length; r++) {
       var roundNum = r + 1;
@@ -546,6 +549,14 @@ var App = (function() {
     container.innerHTML = html;
   }
 
+  function refreshScores() {
+    if (activeTab === 'scores') renderScores();
+  }
+
+  function refreshFromESPN() {
+    API.fetchScores();
+  }
+
   function confirmResetDraft() {
     if (confirm('Reset the draft? All team assignments will be cleared.')) {
       Draft.resetDraft();
@@ -594,7 +605,9 @@ var App = (function() {
     confirmResetAll: confirmResetAll,
     publishState: publishState,
     loadSharedState: loadSharedState,
-    setFontSize: setFontSize
+    setFontSize: setFontSize,
+    refreshScores: refreshScores,
+    refreshFromESPN: refreshFromESPN
   };
 })();
 
