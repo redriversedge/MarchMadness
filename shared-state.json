@@ -1,1 +1,579 @@
-{"draft":{},"games":{},"meta":null}
+{
+  "draft": {
+    "duke": "DH",
+    "uconn": "CL",
+    "michigan-st": "DH",
+    "kansas": "DH",
+    "st-johns": "CB",
+    "louisville": "MB",
+    "ucla": "CL",
+    "ohio-st": "MB",
+    "tcu": "CK",
+    "ucf": "CB",
+    "south-florida": "CK",
+    "northern-iowa": "CK",
+    "cal-baptist": "CH",
+    "north-dakota-st": "CH",
+    "furman": "TH",
+    "siena": "CL",
+    "arizona": "TH",
+    "purdue": "MB",
+    "gonzaga": "CL",
+    "arkansas": "CH",
+    "wisconsin": "CH",
+    "byu": "CB",
+    "miami": "CK",
+    "villanova": "DH",
+    "utah-st": "CL",
+    "missouri": "MB",
+    "texas-nc-st": "TH",
+    "high-point": "CB",
+    "hawaii": "CL",
+    "kennesaw-st": "TH",
+    "queens": "CK",
+    "liu": "MB",
+    "florida": "MB",
+    "houston": "CH",
+    "illinois": "TH",
+    "nebraska": "CL",
+    "vanderbilt": "CK",
+    "unc": "CH",
+    "saint-marys": "DH",
+    "clemson": "CK",
+    "iowa": "TH",
+    "texas-am": "CB",
+    "vcu": "TH",
+    "mcneese": "CH",
+    "troy": "CB",
+    "penn": "MB",
+    "idaho": "DH",
+    "prairie-view-lehigh": "CB",
+    "michigan": "CH",
+    "iowa-st": "CB",
+    "virginia": "TH",
+    "alabama": "CK",
+    "texas-tech": "CH",
+    "tennessee": "MB",
+    "kentucky": "DH",
+    "georgia": "TH",
+    "st-louis": "CL",
+    "santa-clara": "DH",
+    "miami-oh-smu": "CB",
+    "akron": "CL",
+    "hofstra": "MB",
+    "wright-st": "CB",
+    "tennessee-st": "DH",
+    "umbc-howard": "CK"
+  },
+  "games": {
+    "1": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T18:50Z",
+      "statusDetail": "3/19 - 2:50 PM EDT"
+    },
+    "2": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T16:15Z",
+      "statusDetail": "3/19 - 12:15 PM EDT"
+    },
+    "3": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T23:10Z",
+      "statusDetail": "3/20 - 7:10 PM EDT"
+    },
+    "4": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-21T01:45Z",
+      "statusDetail": "3/20 - 9:45 PM EDT"
+    },
+    "5": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T17:30Z",
+      "statusDetail": "3/19 - 1:30 PM EDT"
+    },
+    "6": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T20:05Z",
+      "statusDetail": "3/19 - 4:05 PM EDT"
+    },
+    "7": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T23:25Z",
+      "statusDetail": "3/20 - 7:25 PM EDT"
+    },
+    "8": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-21T02:00Z",
+      "statusDetail": "3/20 - 10:00 PM EDT"
+    },
+    "9": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T17:35Z",
+      "statusDetail": "3/20 - 1:35 PM EDT"
+    },
+    "10": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T20:10Z",
+      "statusDetail": "3/20 - 4:10 PM EDT"
+    },
+    "11": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T17:50Z",
+      "statusDetail": "3/19 - 1:50 PM EDT"
+    },
+    "12": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T20:25Z",
+      "statusDetail": "3/19 - 4:25 PM EDT"
+    },
+    "13": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T23:25Z",
+      "statusDetail": "3/19 - 7:25 PM EDT"
+    },
+    "14": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T02:00Z",
+      "statusDetail": "3/19 - 10:00 PM EDT"
+    },
+    "15": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-21T02:10Z",
+      "statusDetail": "3/20 - 10:10 PM EDT"
+    },
+    "16": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T23:35Z",
+      "statusDetail": "3/20 - 7:35 PM EDT"
+    },
+    "17": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-21T01:25Z",
+      "statusDetail": "3/20 - 9:25 PM EDT"
+    },
+    "18": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T22:50Z",
+      "statusDetail": "3/20 - 6:50 PM EDT"
+    },
+    "19": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T19:15Z",
+      "statusDetail": "3/19 - 3:15 PM EDT"
+    },
+    "20": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T16:40Z",
+      "statusDetail": "3/19 - 12:40 PM EDT"
+    },
+    "21": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T22:50Z",
+      "statusDetail": "3/19 - 6:50 PM EDT"
+    },
+    "22": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T01:25Z",
+      "statusDetail": "3/19 - 9:25 PM EDT"
+    },
+    "23": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T23:35Z",
+      "statusDetail": "3/19 - 7:35 PM EDT"
+    },
+    "24": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T02:10Z",
+      "statusDetail": "3/19 - 10:10 PM EDT"
+    },
+    "25": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-19T23:10Z",
+      "statusDetail": "3/19 - 7:10 PM EDT"
+    },
+    "26": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T01:45Z",
+      "statusDetail": "3/19 - 9:45 PM EDT"
+    },
+    "27": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T16:40Z",
+      "statusDetail": "3/20 - 12:40 PM EDT"
+    },
+    "28": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T19:15Z",
+      "statusDetail": "3/20 - 3:15 PM EDT"
+    },
+    "29": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T20:25Z",
+      "statusDetail": "3/20 - 4:25 PM EDT"
+    },
+    "30": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T17:50Z",
+      "statusDetail": "3/20 - 1:50 PM EDT"
+    },
+    "31": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T16:15Z",
+      "statusDetail": "3/20 - 12:15 PM EDT"
+    },
+    "32": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false,
+      "startTime": "2026-03-20T18:50Z",
+      "statusDetail": "3/20 - 2:50 PM EDT"
+    },
+    "33": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "34": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "35": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "36": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "37": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "38": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "39": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "40": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "41": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "42": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "43": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "44": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "45": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "46": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "47": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "48": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "49": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "50": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "51": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "52": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "53": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "54": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "55": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "56": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "57": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "58": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "59": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "60": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "61": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "62": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    },
+    "63": {
+      "winner": null,
+      "score1": null,
+      "score2": null,
+      "status": "scheduled",
+      "manualOverride": false
+    }
+  },
+  "meta": {
+    "lastPublished": "2026-03-18T02:20:02.499Z",
+    "publishedBy": "admin"
+  }
+}
