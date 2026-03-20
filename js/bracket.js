@@ -231,6 +231,32 @@ var BracketView = (function() {
     return rounds;
   }
 
+  function formatBracketTime(isoString) {
+    if (!isoString) return '';
+    try {
+      var d = new Date(isoString);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    } catch(e) { return ''; }
+  }
+
+  function renderGameStatus(g) {
+    if (!g) return '';
+    var html = '<div class="matchup-status">';
+    if (g.status === 'in_progress') {
+      html += '<span class="matchup-status-live">' + (g.statusDetail || 'LIVE') + '</span>';
+    } else if (g.status === 'final') {
+      html += '<span class="matchup-status-final">FINAL</span>';
+    } else {
+      var timeStr = formatBracketTime(g.startTime);
+      if (timeStr) {
+        html += '<span class="matchup-status-time">' + timeStr + '</span>';
+      }
+    }
+    html += '</div>';
+    return html;
+  }
+
   function renderMatchup(gameId, state) {
     var teams = State.getGameTeams(gameId);
     var g = state.games[gameId];
@@ -239,7 +265,25 @@ var BracketView = (function() {
 
     var html = '<div class="matchup' + (status === 'in_progress' ? ' live' : '') + '">';
     html += renderTeamSlot(teams.team1, winner, g ? g.score1 : null, status);
+    html += renderGameStatus(g);
     html += renderTeamSlot(teams.team2, winner, g ? g.score2 : null, status);
+    html += '</div>';
+    return html;
+  }
+
+  function renderGameStatusCompact(g) {
+    if (!g) return '';
+    var html = '<div class="matchup-status-sm">';
+    if (g.status === 'in_progress') {
+      html += '<span class="matchup-status-live-sm">' + (g.statusDetail || 'LIVE') + '</span>';
+    } else if (g.status === 'final') {
+      html += '<span class="matchup-status-final-sm">F</span>';
+    } else {
+      var timeStr = formatBracketTime(g.startTime);
+      if (timeStr) {
+        html += '<span class="matchup-status-time-sm">' + timeStr + '</span>';
+      }
+    }
     html += '</div>';
     return html;
   }
@@ -252,6 +296,7 @@ var BracketView = (function() {
 
     var html = '<div class="matchup-sm' + (status === 'in_progress' ? ' live' : '') + '">';
     html += renderTeamSlotCompact(teams.team1, winner, g ? g.score1 : null);
+    html += renderGameStatusCompact(g);
     html += renderTeamSlotCompact(teams.team2, winner, g ? g.score2 : null);
     html += '</div>';
     return html;
