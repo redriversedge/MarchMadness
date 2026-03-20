@@ -529,12 +529,13 @@ var App = (function() {
     html += '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="App.refreshFromESPN()">Refresh</button>';
     html += '</div>';
 
-    // Play-in games (First Four) section -- rendered inline or at bottom if all final
-    var playInGames = state.playInGames || [];
-    var allPlayInFinal = playInGames.length > 0;
-    for (var pi = 0; pi < playInGames.length; pi++) {
-      if (playInGames[pi].status !== 'final') { allPlayInFinal = false; break; }
+    // Play-in games (First Four) section -- only show final games to filter out women's/unmatched
+    var allPlayIn = state.playInGames || [];
+    var playInGames = [];
+    for (var pi = 0; pi < allPlayIn.length; pi++) {
+      if (allPlayIn[pi].status === 'final') playInGames.push(allPlayIn[pi]);
     }
+    var allPlayInFinal = playInGames.length > 0;
 
     function renderFirstFourSection() {
       if (playInGames.length === 0) return '';
