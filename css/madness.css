@@ -549,14 +549,11 @@ body {
 
 /* === MATCHUP STATUS (game time / live / final) === */
 .matchup-status {
-  text-align: center;
-  padding: 1px 0;
-  background: #12122a;
-  border-top: 1px solid #2a2a3a;
+  text-align: right;
+  padding: 0 2px 1px 0;
   font-size: 10px;
   line-height: 1.3;
 }
-.matchup-status + .team-slot { border-top: none; }
 .matchup-status-live {
   color: #ef4444;
   font-weight: 700;
@@ -569,14 +566,11 @@ body {
 
 /* === COMPACT MATCHUP STATUS === */
 .matchup-status-sm {
-  text-align: center;
-  padding: 0;
-  background: #12122a;
-  border-top: 1px solid #222;
+  text-align: right;
+  padding: 0 2px 0 0;
   font-size: 8px;
   line-height: 1.2;
 }
-.matchup-status-sm + .team-slot-sm { border-top: none; }
 .matchup-status-live-sm { color: #ef4444; font-weight: 700; }
 .matchup-status-final-sm { color: var(--text-muted); }
 .matchup-status-time-sm { color: var(--text-dim); }

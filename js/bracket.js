@@ -263,9 +263,9 @@ var BracketView = (function() {
     var status = g ? g.status : 'scheduled';
     var winner = g ? g.winner : null;
 
-    var html = '<div class="matchup' + (status === 'in_progress' ? ' live' : '') + '">';
+    var html = renderGameStatus(g);
+    html += '<div class="matchup' + (status === 'in_progress' ? ' live' : '') + '">';
     html += renderTeamSlot(teams.team1, winner, g ? g.score1 : null, status);
-    html += renderGameStatus(g);
     html += renderTeamSlot(teams.team2, winner, g ? g.score2 : null, status);
     html += '</div>';
     return html;
@@ -294,9 +294,9 @@ var BracketView = (function() {
     var status = g ? g.status : 'scheduled';
     var winner = g ? g.winner : null;
 
-    var html = '<div class="matchup-sm' + (status === 'in_progress' ? ' live' : '') + '">';
+    var html = renderGameStatusCompact(g);
+    html += '<div class="matchup-sm' + (status === 'in_progress' ? ' live' : '') + '">';
     html += renderTeamSlotCompact(teams.team1, winner, g ? g.score1 : null);
-    html += renderGameStatusCompact(g);
     html += renderTeamSlotCompact(teams.team2, winner, g ? g.score2 : null);
     html += '</div>';
     return html;
