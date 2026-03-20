@@ -51,7 +51,9 @@ Points per win by round: 1 (R64), 2 (R32), 3 (S16), 4 (E8), 5 (F4), 100 (Champio
 - **Shared state**: Admin exports state as shared-state.json, commits to repo, and pushes. Netlify auto-deploys and all visitors load shared state on page load. No Netlify Blobs dependency.
 - **Results PIN**: Manual results entry requires PIN (1126) to unlock. Each completed game has an "Undo" button to clear the result.
 - **Team Reassignment**: Admin > Reassign tab (PIN: 1126) allows reassigning teams to different players after the draft. Saves to localStorage and updates DRAFT_ASSIGNMENTS live. Publish to server afterward to share.
-- **Scores page**: Fourth tab showing all games organized by round with live scores (with period detail), final scores, or start date/time for scheduled games. Includes First Four play-in games. Shows team owners with color-coded badges. Has a Refresh button to manually trigger ESPN fetch. Auto-refreshes when ESPN polls complete.
+- **Scores page**: Fourth tab showing all games organized by round with live scores (with period detail), final scores, or start date/time for scheduled games. Includes First Four play-in games. Shows team owners with color-coded badges. Has a Refresh button to manually trigger ESPN fetch. Auto-refreshes when ESPN polls complete. Games within each round sort: live first, then scheduled (by start time), then final at the bottom. Completed rounds sink below active/upcoming rounds. First Four section moves to the bottom when all play-in games are final.
+- **Play-in team names**: Teams from First Four games (e.g., "Miami OH/SMU") resolve to the winner's name once the play-in game is final. Uses `getTeamDisplayName()` helper in config.js with a `PLAY_IN_TEAMS` mapping. Applied across scores, bracket, and dashboard.
+- **Full bracket layout**: East (top-left), South (bottom-left), West (top-right), Midwest (bottom-right), matching the official NCAA bracket layout.
 - **Font size**: User preference (Normal/Large/X-Large) stored in localStorage (`mm_fontsize`). Applied via `data-fontsize` attribute on `<html>`.
 
 ## Round Dates
