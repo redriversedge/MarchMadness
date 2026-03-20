@@ -496,7 +496,7 @@ var App = (function() {
     var t1Loser = g.winner && g.winner !== teams.team1;
     html += '<div class="score-team-row' + (t1Loser ? ' score-loser' : '') + '">';
     html += '<span class="score-team-seed">' + (t1 ? t1.seed : '?') + '</span>';
-    html += '<span class="score-team-name" style="border-left:3px solid ' + color1 + ';padding-left:8px;">' + (t1 ? t1.name : 'TBD') + '</span>';
+    html += '<span class="score-team-name" style="border-left:3px solid ' + color1 + ';padding-left:8px;">' + (t1 ? getTeamDisplayName(teams.team1) : 'TBD') + '</span>';
     if (owner1) {
       html += '<span class="team-owner-badge" style="background:' + color1 + '">' + owner1 + '</span>';
     }
@@ -507,7 +507,7 @@ var App = (function() {
     var t2Loser = g.winner && g.winner !== teams.team2;
     html += '<div class="score-team-row' + (t2Loser ? ' score-loser' : '') + '">';
     html += '<span class="score-team-seed">' + (t2 ? t2.seed : '?') + '</span>';
-    html += '<span class="score-team-name" style="border-left:3px solid ' + color2 + ';padding-left:8px;">' + (t2 ? t2.name : 'TBD') + '</span>';
+    html += '<span class="score-team-name" style="border-left:3px solid ' + color2 + ';padding-left:8px;">' + (t2 ? getTeamDisplayName(teams.team2) : 'TBD') + '</span>';
     if (owner2) {
       html += '<span class="team-owner-badge" style="background:' + color2 + '">' + owner2 + '</span>';
     }
@@ -529,14 +529,20 @@ var App = (function() {
     html += '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="App.refreshFromESPN()">Refresh</button>';
     html += '</div>';
 
-    // Play-in games (First Four) section
+    // Play-in games (First Four) section -- rendered inline or at bottom if all final
     var playInGames = state.playInGames || [];
-    if (playInGames.length > 0) {
-      html += '<div class="scores-round">';
-      html += '<div class="scores-round-header">';
-      html += '<span>First Four</span>';
-      html += '<span class="scores-round-date">Mar 17-18</span>';
-      html += '</div>';
+    var allPlayInFinal = playInGames.length > 0;
+    for (var pi = 0; pi < playInGames.length; pi++) {
+      if (playInGames[pi].status !== 'final') { allPlayInFinal = false; break; }
+    }
+
+    function renderFirstFourSection() {
+      if (playInGames.length === 0) return '';
+      var ffHtml = '<div class="scores-round">';
+      ffHtml += '<div class="scores-round-header">';
+      ffHtml += '<span>First Four</span>';
+      ffHtml += '<span class="scores-round-date">Mar 17-18</span>';
+      ffHtml += '</div>';
       for (var p = 0; p < playInGames.length; p++) {
         var pg = playInGames[p];
         var statusClass = '';
@@ -544,32 +550,64 @@ var App = (function() {
         else if (pg.status === 'in_progress') statusClass = 'score-game-live';
         else statusClass = 'score-game-scheduled';
 
-        html += '<div class="score-game ' + statusClass + '">';
+        ffHtml += '<div class="score-game ' + statusClass + '">';
         if (pg.status === 'in_progress') {
-          html += '<div class="score-status"><span class="ticker-live">' + (pg.statusDetail || 'LIVE') + '</span></div>';
+          ffHtml += '<div class="score-status"><span class="ticker-live">' + (pg.statusDetail || 'LIVE') + '</span></div>';
         } else if (pg.status === 'final') {
-          html += '<div class="score-status"><span class="score-final-badge">FINAL</span></div>';
+          ffHtml += '<div class="score-status"><span class="score-final-badge">FINAL</span></div>';
         } else {
           var piTime = formatGameTime(pg.startTime);
-          html += '<div class="score-status"><span class="score-scheduled-badge">' + (piTime || 'TBD') + '</span></div>';
+          ffHtml += '<div class="score-status"><span class="score-scheduled-badge">' + (piTime || 'TBD') + '</span></div>';
         }
-        html += '<div class="score-team-row' + (pg.winner && pg.winner !== 1 ? ' score-loser' : '') + '">';
-        html += '<span class="score-team-seed">' + (pg.seed1 || '?') + '</span>';
-        html += '<span class="score-team-name" style="border-left:3px solid #666;padding-left:8px;">' + pg.team1Name + '</span>';
-        html += '<span class="score-team-score">' + (pg.score1 !== null && pg.score1 !== undefined ? pg.score1 : '') + '</span>';
-        html += '</div>';
-        html += '<div class="score-team-row' + (pg.winner && pg.winner !== 2 ? ' score-loser' : '') + '">';
-        html += '<span class="score-team-seed">' + (pg.seed2 || '?') + '</span>';
-        html += '<span class="score-team-name" style="border-left:3px solid #666;padding-left:8px;">' + pg.team2Name + '</span>';
-        html += '<span class="score-team-score">' + (pg.score2 !== null && pg.score2 !== undefined ? pg.score2 : '') + '</span>';
-        html += '</div>';
-        html += '</div>';
+        ffHtml += '<div class="score-team-row' + (pg.winner && pg.winner !== 1 ? ' score-loser' : '') + '">';
+        ffHtml += '<span class="score-team-seed">' + (pg.seed1 || '?') + '</span>';
+        ffHtml += '<span class="score-team-name" style="border-left:3px solid #666;padding-left:8px;">' + pg.team1Name + '</span>';
+        ffHtml += '<span class="score-team-score">' + (pg.score1 !== null && pg.score1 !== undefined ? pg.score1 : '') + '</span>';
+        ffHtml += '</div>';
+        ffHtml += '<div class="score-team-row' + (pg.winner && pg.winner !== 2 ? ' score-loser' : '') + '">';
+        ffHtml += '<span class="score-team-seed">' + (pg.seed2 || '?') + '</span>';
+        ffHtml += '<span class="score-team-name" style="border-left:3px solid #666;padding-left:8px;">' + pg.team2Name + '</span>';
+        ffHtml += '<span class="score-team-score">' + (pg.score2 !== null && pg.score2 !== undefined ? pg.score2 : '') + '</span>';
+        ffHtml += '</div>';
+        ffHtml += '</div>';
       }
-      html += '</div>';
+      ffHtml += '</div>';
+      return ffHtml;
     }
 
-    // Regular rounds
+    // Show First Four at top if not all final
+    if (!allPlayInFinal) {
+      html += renderFirstFourSection();
+    }
+
+    // Regular rounds -- sort completed rounds to the bottom
+    var roundOrder = [];
     for (var r = 0; r < CONFIG.roundNames.length; r++) {
+      roundOrder.push(r);
+    }
+    // Partition: incomplete rounds first (in original order), then completed rounds (in original order)
+    var incompleteRounds = [];
+    var completedRounds = [];
+    for (var r = 0; r < roundOrder.length; r++) {
+      var roundNum = r + 1;
+      var allFinal = true;
+      var hasAnyGame = false;
+      var gameKeys = Object.keys(BRACKET);
+      for (var i = 0; i < gameKeys.length; i++) {
+        if (BRACKET[gameKeys[i]].round !== roundNum) continue;
+        hasAnyGame = true;
+        if (state.games[gameKeys[i]].status !== 'final') { allFinal = false; break; }
+      }
+      if (allFinal && hasAnyGame) {
+        completedRounds.push(r);
+      } else {
+        incompleteRounds.push(r);
+      }
+    }
+    var sortedRounds = incompleteRounds.concat(completedRounds);
+
+    for (var ri = 0; ri < sortedRounds.length; ri++) {
+      var r = sortedRounds[ri];
       var roundNum = r + 1;
       html += '<div class="scores-round">';
       html += '<div class="scores-round-header">';
@@ -578,13 +616,32 @@ var App = (function() {
       html += '</div>';
 
       var gameKeys = Object.keys(BRACKET);
-      gameKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
-      var hasGames = false;
-
+      // Collect games for this round
+      var roundGames = [];
       for (var i = 0; i < gameKeys.length; i++) {
         var gId = gameKeys[i];
         if (BRACKET[gId].round !== roundNum) continue;
+        roundGames.push(gId);
+      }
+      // Sort: live first, then scheduled (by start time), then final
+      roundGames.sort(function(a, b) {
+        var ga = state.games[a];
+        var gb = state.games[b];
+        var orderA = ga.status === 'in_progress' ? 0 : (ga.status === 'scheduled' ? 1 : 2);
+        var orderB = gb.status === 'in_progress' ? 0 : (gb.status === 'scheduled' ? 1 : 2);
+        if (orderA !== orderB) return orderA - orderB;
+        // Within scheduled games, sort by start time
+        if (ga.status === 'scheduled' && gb.status === 'scheduled') {
+          var ta = ga.startTime ? new Date(ga.startTime).getTime() : Infinity;
+          var tb = gb.startTime ? new Date(gb.startTime).getTime() : Infinity;
+          if (ta !== tb) return ta - tb;
+        }
+        return parseInt(a) - parseInt(b);
+      });
 
+      var hasGames = false;
+      for (var i = 0; i < roundGames.length; i++) {
+        var gId = roundGames[i];
         var g = state.games[gId];
         var teams = State.getGameTeams(gId);
         var rendered = renderScoreGame(gId, g, teams, CONFIG.roundDates[r], roundNum <= 4);
@@ -597,6 +654,11 @@ var App = (function() {
       }
 
       html += '</div>';
+    }
+
+    // Show First Four at bottom if all final
+    if (allPlayInFinal) {
+      html += renderFirstFourSection();
     }
 
     html += '</div>';

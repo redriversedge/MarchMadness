@@ -83,10 +83,10 @@ var BracketView = (function() {
     var state = State.get();
     var html = '<div class="full-bracket">';
 
-    // Left side: East and West (rounds flow left to right toward center)
+    // Left side: East (top) and South (bottom) -- rounds flow left to right toward center
     html += '<div class="full-bracket-half left-half">';
     html += renderFullRegion('East', state, 'left');
-    html += renderFullRegion('West', state, 'left');
+    html += renderFullRegion('South', state, 'left');
     html += '</div>';
 
     // Center: Final Four
@@ -94,9 +94,9 @@ var BracketView = (function() {
     html += renderFinalFourCompact(state);
     html += '</div>';
 
-    // Right side: South and Midwest (rounds flow right to left toward center)
+    // Right side: West (top) and Midwest (bottom) -- rounds flow right to left toward center
     html += '<div class="full-bracket-half right-half">';
-    html += renderFullRegion('South', state, 'right');
+    html += renderFullRegion('West', state, 'right');
     html += renderFullRegion('Midwest', state, 'right');
     html += '</div>';
 
@@ -278,7 +278,7 @@ var BracketView = (function() {
 
     var html = '<div class="' + classes + '" style="background:' + bgColor + ';border-left-color:' + (owner ? color : '#555') + '">';
     html += '<span class="team-seed">(' + (team ? team.seed : '?') + ')</span>';
-    html += '<span class="team-name">' + (team ? team.name : teamKey) + '</span>';
+    html += '<span class="team-name">' + (team ? getTeamDisplayName(teamKey) : teamKey) + '</span>';
     if (owner) {
       html += '<span class="team-owner-badge" style="background:' + color + '">' + owner + '</span>';
     }
@@ -309,7 +309,7 @@ var BracketView = (function() {
 
     var html = '<div class="' + classes + '" style="background:' + bgColor + ';border-left:2px solid ' + (owner ? color : '#555') + '">';
     html += '<span class="seed-sm">' + (team ? team.seed : '?') + '</span>';
-    html += '<span class="name-sm">' + (team ? team.name : '') + '</span>';
+    html += '<span class="name-sm">' + (team ? getTeamDisplayName(teamKey) : '') + '</span>';
     if (score !== null && score !== undefined) {
       html += '<span class="score-sm">' + score + '</span>';
     }

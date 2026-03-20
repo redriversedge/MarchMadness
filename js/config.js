@@ -198,6 +198,43 @@ function getTeamOwner(teamKey) {
   return DRAFT_ASSIGNMENTS[teamKey] || null;
 }
 
+// Play-in team keys mapped to their constituent team names
+// Each entry: [team1Name, team2Name] matching the "/" in the display name
+var PLAY_IN_TEAMS = {
+  'miami-oh-smu':        ['Miami (OH)', 'SMU'],
+  'texas-nc-st':         ['Texas', 'NC State'],
+  'prairie-view-lehigh': ['Prairie View', 'Lehigh'],
+  'umbc-howard':         ['UMBC', 'Howard']
+};
+
+// Helper: get resolved team name (shows play-in winner if decided)
+function getTeamDisplayName(teamKey) {
+  var team = TEAMS[teamKey];
+  if (!team) return teamKey;
+  if (!PLAY_IN_TEAMS[teamKey]) return team.name;
+
+  // Check play-in games for a result
+  var state = State.get();
+  var playInGames = state.playInGames || [];
+  var parts = PLAY_IN_TEAMS[teamKey];
+
+  for (var i = 0; i < playInGames.length; i++) {
+    var pg = playInGames[i];
+    if (pg.status !== 'final' || !pg.winner) continue;
+    var n1 = pg.team1Name.toLowerCase();
+    var n2 = pg.team2Name.toLowerCase();
+    var p1 = parts[0].toLowerCase();
+    var p2 = parts[1].toLowerCase();
+    // Match if both play-in team names contain our parts (flexible matching)
+    if ((n1.indexOf(p1) !== -1 && n2.indexOf(p2) !== -1) ||
+        (n1.indexOf(p2) !== -1 && n2.indexOf(p1) !== -1)) {
+      return pg.winner === 1 ? pg.team1Name : pg.team2Name;
+    }
+  }
+
+  return team.name;
+}
+
 // Helper: get all teams for a player
 function getTeamsForPlayer(playerId) {
   var teams = [];

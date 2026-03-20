@@ -80,13 +80,13 @@ var Dashboard = (function() {
       html += '<div class="ticker-game">';
       html += '<span class="ticker-live">LIVE</span>';
       html += '<span class="ticker-team" style="color:' + c1 + '">';
-      html += '(' + (t1 ? t1.seed : '?') + ') ' + (t1 ? t1.name : 'TBD');
+      html += '(' + (t1 ? t1.seed : '?') + ') ' + (t1 ? getTeamDisplayName(g.team1) : 'TBD');
       html += '</span>';
       html += '<span class="ticker-score">' + (g.score1 || 0) + '</span>';
       html += '<span class="ticker-sep">-</span>';
       html += '<span class="ticker-score">' + (g.score2 || 0) + '</span>';
       html += '<span class="ticker-team" style="color:' + c2 + '">';
-      html += '(' + (t2 ? t2.seed : '?') + ') ' + (t2 ? t2.name : 'TBD');
+      html += '(' + (t2 ? t2.seed : '?') + ') ' + (t2 ? getTeamDisplayName(g.team2) : 'TBD');
       html += '</span>';
       html += '</div>';
       if (i < games.length - 1) html += '<div class="ticker-divider"></div>';
@@ -162,7 +162,7 @@ var Dashboard = (function() {
       var elim = State.isTeamEliminated(teams[i]);
       html += '<span class="team-badge' + (elim ? ' eliminated' : '') + '" ';
       html += 'style="border-color:' + s.color + '">';
-      html += '(' + t.seed + ') ' + t.name;
+      html += '(' + t.seed + ') ' + getTeamDisplayName(teams[i]);
       html += '</span>';
     }
     html += '</div>';
