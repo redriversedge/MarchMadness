@@ -462,7 +462,7 @@ body {
 
 .bracket-game-wrap {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   padding: 2px 4px;
 }
 
