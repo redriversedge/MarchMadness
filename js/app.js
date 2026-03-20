@@ -439,6 +439,21 @@ var App = (function() {
   }
 
   // === SCORES/SCHEDULE PAGE ===
+  var scoresFilter = 'all'; // 'all' or player ID like 'TH'
+
+  function setScoresFilter(filter) {
+    scoresFilter = filter;
+    renderScores();
+  }
+
+  function gameMatchesFilter(gId) {
+    if (scoresFilter === 'all') return true;
+    var teams = State.getGameTeams(gId);
+    var owner1 = teams.team1 ? getTeamOwner(teams.team1) : null;
+    var owner2 = teams.team2 ? getTeamOwner(teams.team2) : null;
+    return owner1 === scoresFilter || owner2 === scoresFilter;
+  }
+
   function formatGameTime(isoString) {
     if (!isoString) return '';
     try {
@@ -527,6 +542,17 @@ var App = (function() {
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
     html += '<h2 class="rules-title" style="margin-bottom:0;">Scores & Schedule</h2>';
     html += '<button class="btn btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="App.refreshFromESPN()">Refresh</button>';
+    html += '</div>';
+
+    // Player filter pills
+    html += '<div class="scores-filter" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">';
+    var allActive = scoresFilter === 'all' ? ' scores-filter-active' : '';
+    html += '<button class="scores-filter-btn' + allActive + '" onclick="App.setScoresFilter(\'all\')" style="font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid #444;background:' + (scoresFilter === 'all' ? '#fff' : 'transparent') + ';color:' + (scoresFilter === 'all' ? '#000' : '#ccc') + ';cursor:pointer;">All</button>';
+    for (var pi = 0; pi < CONFIG.players.length; pi++) {
+      var p = CONFIG.players[pi];
+      var isActive = scoresFilter === p.id;
+      html += '<button class="scores-filter-btn" onclick="App.setScoresFilter(\'' + p.id + '\')" style="font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid ' + (isActive ? p.color : '#444') + ';background:' + (isActive ? p.color : 'transparent') + ';color:' + (isActive ? '#000' : p.color) + ';cursor:pointer;">' + p.name + '</button>';
+    }
     html += '</div>';
 
     // Play-in games (First Four) section -- only show final games to filter out women's/unmatched
@@ -643,6 +669,7 @@ var App = (function() {
       var hasGames = false;
       for (var i = 0; i < roundGames.length; i++) {
         var gId = roundGames[i];
+        if (!gameMatchesFilter(gId)) continue;
         var g = state.games[gId];
         var teams = State.getGameTeams(gId);
         var rendered = renderScoreGame(gId, g, teams, CONFIG.roundDates[r], roundNum <= 4);
@@ -724,7 +751,8 @@ var App = (function() {
     loadSharedState: loadSharedState,
     setFontSize: setFontSize,
     refreshScores: refreshScores,
-    refreshFromESPN: refreshFromESPN
+    refreshFromESPN: refreshFromESPN,
+    setScoresFilter: setScoresFilter
   };
 })();
 

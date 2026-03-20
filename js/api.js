@@ -2,8 +2,9 @@
 
 var API = (function() {
   var pollTimer = null;
-  var POLL_ACTIVE = 3 * 60 * 1000;   // 3 min during live games
-  var POLL_IDLE = 15 * 60 * 1000;    // 15 min otherwise
+  var POLL_ACTIVE = 2 * 60 * 1000;   // 2 min during live games
+  var POLL_SOON = 2 * 60 * 1000;     // 2 min when games start within 30 min
+  var POLL_IDLE = 10 * 60 * 1000;    // 10 min otherwise
   var isFetching = false;
 
   // Comprehensive name/abbreviation mapping to our internal team keys
@@ -376,9 +377,24 @@ var API = (function() {
     return y + m + day;
   }
 
+  function hasGamesSoon() {
+    var state = State.get();
+    var now = Date.now();
+    var thirtyMin = 30 * 60 * 1000;
+    var gameKeys = Object.keys(BRACKET);
+    for (var i = 0; i < gameKeys.length; i++) {
+      var g = state.games[gameKeys[i]];
+      if (g.status === 'scheduled' && g.startTime) {
+        var start = new Date(g.startTime).getTime();
+        if (!isNaN(start) && start > now && (start - now) < thirtyMin) return true;
+      }
+    }
+    return false;
+  }
+
   function adjustPollRate(hasLive) {
     if (pollTimer) clearInterval(pollTimer);
-    var rate = hasLive ? POLL_ACTIVE : POLL_IDLE;
+    var rate = hasLive ? POLL_ACTIVE : (hasGamesSoon() ? POLL_SOON : POLL_IDLE);
     pollTimer = setInterval(function() { fetchScores(); }, rate);
   }
 
