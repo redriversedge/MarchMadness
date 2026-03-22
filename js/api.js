@@ -344,28 +344,24 @@ var API = (function() {
   }
 
   function getTournamentDates() {
-    // Cover all active tournament dates
-    // First Four: Mar 17-18, R64: Mar 20-21, R32: Mar 22-23
-    // S16: Mar 27-28, E8: Mar 29-30, F4: Apr 5, Champ: Apr 7
-    var today = new Date();
-    var dates = [];
+    // All known tournament dates (First Four through Championship)
+    var allDates = [
+      '20260319', '20260320', '20260321', // First Four + R64
+      '20260322', '20260323',             // R32
+      '20260327', '20260328',             // Sweet 16
+      '20260329', '20260330',             // Elite 8
+      '20260405',                         // Final Four
+      '20260407'                          // Championship
+    ];
 
-    // Fetch a window of dates to catch scheduled, live, and recent games
-    // This covers upcoming games (with start times) and recently completed games
-    for (var offset = -2; offset <= 5; offset++) {
-      var d = new Date(today);
-      d.setDate(d.getDate() + offset);
-      dates.push(formatDate(d));
-    }
+    // Only fetch dates up to tomorrow (no point fetching future dates with no data)
+    var tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    var cutoff = formatDate(tomorrow);
 
-    // Remove duplicates
-    var unique = {};
     var result = [];
-    for (var i = 0; i < dates.length; i++) {
-      if (!unique[dates[i]]) {
-        unique[dates[i]] = true;
-        result.push(dates[i]);
-      }
+    for (var i = 0; i < allDates.length; i++) {
+      if (allDates[i] <= cutoff) result.push(allDates[i]);
     }
     return result;
   }

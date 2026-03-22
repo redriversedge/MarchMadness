@@ -51,11 +51,14 @@ var App = (function() {
           for (var i = 0; i < gameKeys.length; i++) {
             if (state.games[gameKeys[i]]) {
               var sg = data.games[gameKeys[i]];
-              state.games[gameKeys[i]].winner = sg.winner;
-              state.games[gameKeys[i]].score1 = sg.score1;
-              state.games[gameKeys[i]].score2 = sg.score2;
-              state.games[gameKeys[i]].status = sg.status;
-              state.games[gameKeys[i]].manualOverride = sg.manualOverride;
+              var local = state.games[gameKeys[i]];
+              // Don't let stale shared state overwrite results that ESPN already set locally
+              if (local.status === 'final' && local.winner && !sg.winner) continue;
+              local.winner = sg.winner;
+              local.score1 = sg.score1;
+              local.score2 = sg.score2;
+              local.status = sg.status;
+              local.manualOverride = sg.manualOverride;
             }
           }
           State.save();
