@@ -95,10 +95,9 @@ var Dashboard = (function() {
     // Badge
     html += '<div class="player-badge" style="background:' + s.color + '">' + s.playerId + '</div>';
 
-    // Name and teams alive
+    // Name
     html += '<div class="player-info">';
     html += '<div class="player-name">' + s.name + '</div>';
-    html += '<div class="player-meta">' + s.teamsAlive + ' teams alive</div>';
     html += '</div>';
 
     // Teams alive as score
