@@ -47,7 +47,6 @@ var Scoring = (function() {
     });
 
     standings.sort(function(a, b) {
-      if (b.total !== a.total) return b.total - a.total;
       return b.teamsAlive - a.teamsAlive;
     });
 

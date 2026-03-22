@@ -51,19 +51,6 @@ var Dashboard = (function() {
       }
     }
 
-    // Max possible
-    html += '<div class="max-possible">';
-    html += '<div class="max-label">Max Possible Points</div>';
-    html += '<div class="max-values">';
-    standings.sort(function(a, b) { return b.maxPossible - a.maxPossible; });
-    for (var i = 0; i < standings.length; i++) {
-      var s = standings[i];
-      html += '<span class="max-item" style="color:' + s.color + '">';
-      html += s.playerId + ': ' + s.maxPossible;
-      html += '</span>';
-    }
-    html += '</div>';
-    html += '</div>';
 
     container.innerHTML = html;
   }
@@ -114,10 +101,10 @@ var Dashboard = (function() {
     html += '<div class="player-meta">' + s.teamsAlive + ' teams alive</div>';
     html += '</div>';
 
-    // Score
+    // Teams alive as score
     html += '<div class="player-score" style="color:' + s.color + '">';
-    html += '<div class="score-num">' + s.total + '</div>';
-    html += '<div class="score-label">pts</div>';
+    html += '<div class="score-num">' + s.teamsAlive + '</div>';
+    html += '<div class="score-label">alive</div>';
     html += '</div>';
 
     html += '</div>';
@@ -130,21 +117,7 @@ var Dashboard = (function() {
     // Header
     html += '<div class="card-header" style="background:' + s.color + '">';
     html += '<span>' + s.name + ' (' + s.playerId + ')</span>';
-    html += '<span>' + s.total + ' pts | ' + s.teamsAlive + '/' + s.teamsTotal + ' alive</span>';
-    html += '</div>';
-
-    // Round breakdown
-    html += '<div class="card-rounds">';
-    for (var i = 0; i < CONFIG.roundNames.length; i++) {
-      html += '<div class="round-box">';
-      html += '<div class="round-label">' + CONFIG.roundNames[i] + '</div>';
-      html += '<div class="round-pts">' + s.byRound[i] + '</div>';
-      html += '</div>';
-    }
-    html += '<div class="round-box round-total" style="background:' + s.color + '">';
-    html += '<div class="round-label">Total</div>';
-    html += '<div class="round-pts">' + s.total + '</div>';
-    html += '</div>';
+    html += '<span>' + s.teamsAlive + '/' + s.teamsTotal + ' alive</span>';
     html += '</div>';
 
     // Team roster

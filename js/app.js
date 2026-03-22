@@ -106,9 +106,7 @@ var App = (function() {
       '<button class="nav-btn" data-tab="bracket" onclick="App.switchTab(\'bracket\')">' +
         '<span class="nav-icon">&#127936;</span><span class="nav-label">Bracket</span></button>' +
       '<button class="nav-btn" data-tab="scores" onclick="App.switchTab(\'scores\')">' +
-        '<span class="nav-icon">&#9917;</span><span class="nav-label">Scores</span></button>' +
-      '<button class="nav-btn" data-tab="rules" onclick="App.switchTab(\'rules\')">' +
-        '<span class="nav-icon">&#128220;</span><span class="nav-label">Rules</span></button>';
+        '<span class="nav-icon">&#9917;</span><span class="nav-label">Scores</span></button>';
   }
 
   function switchTab(tab) {
@@ -119,7 +117,7 @@ var App = (function() {
       buttons[i].className = buttons[i].getAttribute('data-tab') === tab ? 'nav-btn active' : 'nav-btn';
     }
 
-    var tabs = ['dashboard', 'bracket', 'scores', 'rules'];
+    var tabs = ['dashboard', 'bracket', 'scores'];
     for (var i = 0; i < tabs.length; i++) {
       var el = document.getElementById('tab-' + tabs[i]);
       if (el) el.style.display = tabs[i] === tab ? 'block' : 'none';
@@ -128,31 +126,8 @@ var App = (function() {
     if (tab === 'dashboard') Dashboard.render();
     else if (tab === 'bracket') BracketView.render();
     else if (tab === 'scores') renderScores();
-    else if (tab === 'rules') renderRules();
   }
 
-  // === RULES PAGE ===
-  function renderRules() {
-    var container = document.getElementById('tab-rules');
-    if (!container) return;
-
-    var html = '<div class="rules-page">';
-    html += '<h2 class="rules-title">Scoring</h2>';
-
-    html += '<p style="margin-bottom:12px;">Each time one of your teams wins a game, you earn points based on the round:</p>';
-    html += '<table class="rules-table">';
-    html += '<tr><th>Round</th><th>Dates</th><th>Points</th></tr>';
-    for (var i = 0; i < CONFIG.roundPoints.length; i++) {
-      html += '<tr><td>' + CONFIG.roundFullNames[i] + '</td><td>' + CONFIG.roundDates[i] + '</td><td>' + CONFIG.roundPoints[i] + '</td></tr>';
-    }
-    html += '<tr class="rules-total"><td>Max per team</td><td></td><td>' + CONFIG.roundPoints.reduce(function(a,b){return a+b;}, 0) + '</td></tr>';
-    html += '</table>';
-
-    html += '<p style="margin-top:16px;">Most total points at the end of the tournament wins.</p>';
-
-    html += '</div>';
-    container.innerHTML = html;
-  }
 
   // === ADMIN ===
   function toggleAdmin() {
