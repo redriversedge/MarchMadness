@@ -100,7 +100,7 @@ var API = (function() {
     updateStatus('Fetching...');
 
     // Full fetch: all tournament dates (initial load + manual refresh)
-    // Incremental: just today and tomorrow (regular polling)
+    // Incremental: just recent dates (regular polling)
     var dates;
     if (fullFetch || !initialFetchDone) {
       dates = getTournamentDates();
@@ -109,34 +109,40 @@ var API = (function() {
       dates = getRecentDates();
     }
 
-    var completed = 0;
-    var hasLive = false;
-
     if (dates.length === 0) {
       finishFetch(false, callback);
       return;
     }
 
-    for (var d = 0; d < dates.length; d++) {
-      (function(date) {
-        var url = '/.netlify/functions/ncaa-proxy?date=' + date;
-        fetch(url)
-          .then(function(res) { return res.json(); })
-          .then(function(data) {
-            if (data && data.events) {
-              var liveFound = processEvents(data.events);
-              if (liveFound) hasLive = true;
-            }
-            completed++;
-            if (completed >= dates.length) finishFetch(hasLive, callback);
-          })
-          .catch(function(err) {
-            console.error('API fetch error for ' + date + ':', err);
-            completed++;
-            if (completed >= dates.length) finishFetch(hasLive, callback);
-          });
-      })(dates[d]);
+    // Process dates sequentially in chronological order so earlier round
+    // results are set before later rounds try to resolve teams via source games
+    var hasLive = false;
+    var index = 0;
+
+    function fetchNext() {
+      if (index >= dates.length) {
+        finishFetch(hasLive, callback);
+        return;
+      }
+      var date = dates[index];
+      index++;
+      var url = '/.netlify/functions/ncaa-proxy?date=' + date;
+      fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data && data.events) {
+            var liveFound = processEvents(data.events);
+            if (liveFound) hasLive = true;
+          }
+          fetchNext();
+        })
+        .catch(function(err) {
+          console.error('API fetch error for ' + date + ':', err);
+          fetchNext();
+        });
     }
+
+    fetchNext();
   }
 
   function finishFetch(hasLive, callback) {

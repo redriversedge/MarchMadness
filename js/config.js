@@ -6,7 +6,7 @@ var CONFIG = {
   roundPoints: [1, 2, 3, 4, 5, 100],
   roundNames: ['R64', 'R32', 'S16', 'E8', 'F4', 'Champ'],
   roundFullNames: ['Round of 64', 'Round of 32', 'Sweet 16', 'Elite 8', 'Final Four', 'Championship'],
-  roundDates: ['Mar 20-21', 'Mar 22-23', 'Mar 27-28', 'Mar 29-30', 'Apr 5', 'Apr 7'],
+  roundDates: ['Mar 20-21', 'Mar 22-23', 'Mar 26-27', 'Mar 28-29', 'Apr 5', 'Apr 7'],
 
   players: [
     { id: 'CB', name: 'Clifford', color: '#ef4444' },
