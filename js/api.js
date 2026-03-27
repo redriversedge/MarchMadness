@@ -81,9 +81,12 @@ var API = (function() {
     'miami (oh)': 'miami-oh-smu', 'miami ohio': 'miami-oh-smu', 'smu': 'miami-oh-smu', 'miami redhawks': 'miami-oh-smu', 'smu mustangs': 'miami-oh-smu'
   };
 
+  var initialFetchDone = false;
+
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
-    fetchScores();
+    // First fetch covers all tournament dates to catch up on missed results
+    fetchScores(null, true);
     pollTimer = setInterval(function() { fetchScores(); }, POLL_IDLE);
   }
 
@@ -91,14 +94,28 @@ var API = (function() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
 
-  function fetchScores(callback) {
+  function fetchScores(callback, fullFetch) {
     if (isFetching) return;
     isFetching = true;
     updateStatus('Fetching...');
 
-    var dates = getTournamentDates();
+    // Full fetch: all tournament dates (initial load + manual refresh)
+    // Incremental: just today and tomorrow (regular polling)
+    var dates;
+    if (fullFetch || !initialFetchDone) {
+      dates = getTournamentDates();
+      initialFetchDone = true;
+    } else {
+      dates = getRecentDates();
+    }
+
     var completed = 0;
     var hasLive = false;
+
+    if (dates.length === 0) {
+      finishFetch(false, callback);
+      return;
+    }
 
     for (var d = 0; d < dates.length; d++) {
       (function(date) {
@@ -344,24 +361,34 @@ var API = (function() {
   }
 
   function getTournamentDates() {
-    // All known tournament dates (First Four through Championship)
-    var allDates = [
-      '20260319', '20260320', '20260321', // First Four + R64
-      '20260322', '20260323',             // R32
-      '20260327', '20260328',             // Sweet 16
-      '20260329', '20260330',             // Elite 8
-      '20260405',                         // Final Four
-      '20260407'                          // Championship
-    ];
-
-    // Only fetch dates up to tomorrow (no point fetching future dates with no data)
+    // Generate every date from tournament start through today+1
+    // No gaps, no assumptions about which specific dates have games
+    var start = new Date(2026, 2, 19); // March 19, 2026 (First Four)
+    var end = new Date(2026, 3, 8);    // April 8, 2026 (day after Championship)
     var tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    var cutoff = formatDate(tomorrow);
+    tomorrow.setHours(23, 59, 59); // end of tomorrow
+
+    // Cap at tournament end
+    if (tomorrow > end) tomorrow = end;
 
     var result = [];
-    for (var i = 0; i < allDates.length; i++) {
-      if (allDates[i] <= cutoff) result.push(allDates[i]);
+    var d = new Date(start);
+    while (d <= tomorrow) {
+      result.push(formatDate(d));
+      d.setDate(d.getDate() + 1);
+    }
+    return result;
+  }
+
+  function getRecentDates() {
+    // For regular polling, only fetch yesterday, today, and tomorrow
+    // Past final games don't change; the initial full fetch already caught them
+    var result = [];
+    for (var offset = -1; offset <= 1; offset++) {
+      var d = new Date();
+      d.setDate(d.getDate() + offset);
+      result.push(formatDate(d));
     }
     return result;
   }

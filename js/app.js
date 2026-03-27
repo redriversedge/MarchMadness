@@ -676,7 +676,7 @@ var App = (function() {
   }
 
   function refreshFromESPN() {
-    API.fetchScores();
+    API.fetchScores(null, true);
   }
 
   function confirmResetDraft() {
