@@ -485,7 +485,9 @@
       "score1": null,
       "score2": null,
       "status": "scheduled",
-      "manualOverride": false
+      "manualOverride": false,
+      "startTime": "2026-03-26T23:00Z",
+      "statusDetail": "3/26 - 7:00 PM EDT"
     },
     "52": {
       "winner": null,
@@ -506,7 +508,9 @@
       "score1": null,
       "score2": null,
       "status": "scheduled",
-      "manualOverride": false
+      "manualOverride": false,
+      "startTime": "2026-03-26T23:00Z",
+      "statusDetail": "3/26 - 7:00 PM EDT"
     },
     "55": {
       "winner": null,
