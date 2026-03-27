@@ -13,8 +13,11 @@ var App = (function() {
 
     renderNav();
     switchTab('dashboard');
-    loadSharedState();
-    API.startPolling();
+    // Load shared state first, THEN start ESPN polling
+    // Prevents race condition where shared state resets results mid-fetch
+    loadSharedState(function() {
+      API.startPolling();
+    });
 
     setInterval(function() {
       var el = document.getElementById('last-updated');
@@ -29,11 +32,14 @@ var App = (function() {
     }, 60000);
   }
 
-  function loadSharedState() {
+  function loadSharedState(onComplete) {
     fetch('/shared-state.json?t=' + Date.now())
       .then(function(res) { return res.json(); })
       .then(function(data) {
-        if (!data) return;
+        if (!data) {
+          if (onComplete) onComplete();
+          return;
+        }
 
         if (data.draft && Object.keys(data.draft).length > 0) {
           var existing = Object.keys(DRAFT_ASSIGNMENTS);
@@ -54,6 +60,7 @@ var App = (function() {
               var local = state.games[gameKeys[i]];
               // Don't let stale shared state overwrite results that ESPN already set locally
               if (local.status === 'final' && local.winner && !sg.winner) continue;
+              if (local.status === 'in_progress' && !sg.winner) continue;
               local.winner = sg.winner;
               local.score1 = sg.score1;
               local.score2 = sg.score2;
@@ -65,9 +72,12 @@ var App = (function() {
         }
 
         switchTab(activeTab);
+        if (onComplete) onComplete();
       })
       .catch(function(err) {
         console.log('Could not load shared state:', err.message);
+        // Still start polling even if shared state fails
+        if (onComplete) onComplete();
       });
   }
 
