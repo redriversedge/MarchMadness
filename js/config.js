@@ -159,9 +159,9 @@ var BRACKET = (function() {
     gameId++;
   }
 
-  // F4: 2 games (East vs West, South vs Midwest)
-  games[61] = { round: 5, region: 'Final Four', source1: 57, source2: 58 };
-  games[62] = { round: 5, region: 'Final Four', source1: 59, source2: 60 };
+  // F4: 2 games (East vs South, West vs Midwest)
+  games[61] = { round: 5, region: 'Final Four', source1: 57, source2: 59 };
+  games[62] = { round: 5, region: 'Final Four', source1: 58, source2: 60 };
 
   // Championship
   games[63] = { round: 6, region: 'Championship', source1: 61, source2: 62 };
